@@ -1,5 +1,4 @@
 """配置管理"""
-import os
 from pathlib import Path
 
 from pydantic_settings import BaseSettings

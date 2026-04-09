@@ -1,6 +1,5 @@
 """Shell 命令执行工具"""
 import subprocess
-from pathlib import Path
 
 from langchain_core.tools import tool
 

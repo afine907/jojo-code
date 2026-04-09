@@ -1,8 +1,6 @@
 """Agent 图测试"""
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from nano_code.agent.graph import build_agent_graph
 from nano_code.agent.state import AgentState
 

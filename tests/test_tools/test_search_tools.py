@@ -1,6 +1,4 @@
 """搜索工具测试"""
-import pytest
-
 from nano_code.tools.search_tools import glob_search, grep_search
 
 

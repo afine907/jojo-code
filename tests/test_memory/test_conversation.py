@@ -1,5 +1,4 @@
 """记忆系统测试"""
-import pytest
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 from nano_code.memory.conversation import ConversationMemory
