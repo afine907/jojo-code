@@ -1,0 +1,53 @@
+[project]
+name = "nano-code"
+version = "0.1.0"
+description = "A mini coding agent built with LangGraph - Learn Agent architecture through practice"
+readme = "README.md"
+authors = [
+    { name = "afine907", email = "1049905106@qq.com" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "langgraph>=0.2",
+    "langchain>=0.3",
+    "langchain-openai>=0.2",
+    "langchain-anthropic>=0.2",
+    "rich>=13",
+    "prompt-toolkit>=3",
+    "pydantic>=2",
+    "pydantic-settings>=2",
+    "tiktoken>=0.5",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=0.23",
+    "pytest-cov>=4",
+    "mypy>=1",
+    "ruff>=0.4",
+]
+
+[project.scripts]
+nano-code = "nano_code.cli.main:main"
+
+[build-system]
+requires = ["uv_build>=0.9.2,<0.10.0"]
+build-backend = "uv_build"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP", "B", "C4"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["src"]
