@@ -1,4 +1,5 @@
 """配置管理测试"""
+
 from pathlib import Path
 
 from nano_code.core.config import Settings, get_settings
@@ -69,6 +70,7 @@ class TestGetSettings:
         """应该返回 Settings 实例"""
         # 重置单例
         import nano_code.core.config as config_module
+
         config_module._settings = None
 
         settings = get_settings()
@@ -79,6 +81,7 @@ class TestGetSettings:
         """应该返回单例"""
         # 重置单例
         import nano_code.core.config as config_module
+
         config_module._settings = None
 
         settings1 = get_settings()

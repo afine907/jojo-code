@@ -1,4 +1,5 @@
 """CLI 主入口测试"""
+
 from unittest.mock import MagicMock, patch
 
 import pytest

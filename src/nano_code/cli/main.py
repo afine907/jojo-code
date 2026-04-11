@@ -1,4 +1,5 @@
 """CLI 主入口"""
+
 import sys
 
 from langchain_core.messages import AIMessage, HumanMessage
