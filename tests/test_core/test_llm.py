@@ -1,6 +1,5 @@
 """LLM 客户端测试"""
 
-import os
 from unittest.mock import MagicMock, patch
 
 from nano_code.core.config import Settings

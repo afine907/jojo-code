@@ -1,7 +1,6 @@
 """配置管理测试"""
 
 from pathlib import Path
-from unittest.mock import MagicMock
 
 from nano_code.core.config import Settings, get_settings
 
