@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from langchain_core.messages import HumanMessage
 
-from nano_code.cli.console import SessionStats, session_stats
+from nano_code.cli.console import session_stats
 from nano_code.cli.main import handle_command, main
 
 

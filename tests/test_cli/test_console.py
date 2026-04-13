@@ -1,8 +1,5 @@
 """CLI 控制台输出测试"""
 
-import pytest
-from rich.console import Console
-
 from nano_code.cli.console import (
     SessionStats,
     print_error,
@@ -31,11 +28,7 @@ class TestSessionStats:
         """已用时间（秒）测试"""
         stats = SessionStats()
         stats.start_time = 1000.0
-        # 模拟经过 30 秒
-        import time
-
-        current = time.time()
-        # 由于我们无法控制 time.time()，只测试格式
+        # 测试格式
         elapsed = stats.elapsed_time()
         assert "s" in elapsed or "m" in elapsed
 
@@ -117,7 +110,7 @@ class TestConsoleOutput:
 
     def test_print_history_with_messages(self, capsys):
         """打印消息历史"""
-        from langchain_core.messages import HumanMessage, AIMessage
+        from langchain_core.messages import AIMessage, HumanMessage
 
         messages = [
             HumanMessage(content="Hello"),
@@ -131,7 +124,7 @@ class TestConsoleOutput:
     def test_print_session_stats(self, capsys):
         """打印会话统计"""
         # 使用全局 session_stats 并设置值
-        from nano_code.cli.console import session_stats as global_stats
+        global_stats = session_stats
 
         global_stats.message_count = 5
         global_stats.tool_calls = 3
