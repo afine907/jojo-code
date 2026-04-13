@@ -56,6 +56,21 @@
 
 ### 安装
 
+#### 方式一：从 PyPI 安装（推荐）
+
+```bash
+# 使用 pip
+pip install nano-code
+
+# 或使用 uv tool（推荐）
+uv tool install nano-code
+
+# 运行
+nano-code
+```
+
+#### 方式二：从源码安装（开发）
+
 ```bash
 # 克隆项目
 git clone https://github.com/afine907/nano-code.git
@@ -63,15 +78,30 @@ cd nano-code
 
 # 安装依赖 (推荐使用 uv)
 uv sync
+
+# 运行
+uv run nano-code
 ```
 
 ### 配置
 
+创建 `.env` 文件（参考 `.env.example`）：
+
 ```bash
-# 设置 API 密钥
-export OPENAI_API_KEY=your-key-here
-# 或
-export ANTHROPIC_API_KEY=your-key-here
+# 方式 1: OpenAI 兼容 API（如 LongCat、DeepSeek 等）
+OPENAI_API_KEY=your-api-key
+OPENAI_BASE_URL=https://api.longcat.chat/openai/v1
+MODEL=LongCat-Flash-Chat
+
+# 方式 2: Anthropic Claude
+# OPENAI_API_KEY=
+# ANTHROPIC_API_KEY=your-anthropic-api-key
+# MODEL=claude-sonnet-4-20250514
+
+# 方式 3: OpenAI 默认
+# OPENAI_API_KEY=your-openai-api-key
+# OPENAI_BASE_URL=
+# NANO_CODE_MODEL=gpt-4o-mini
 ```
 
 ### 运行
