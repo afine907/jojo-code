@@ -63,7 +63,7 @@ class Lock:
             async with self._lock:
                 if future in self._queue:
                     self._queue.remove(future)
-            raise LockTimeoutError(f"Lock timeout: {self.name}")
+            raise LockTimeoutError(f"Lock timeout: {self.name}") from None
 
     async def release(self) -> None:
         """释放锁"""

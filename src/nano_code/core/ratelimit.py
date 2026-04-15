@@ -15,13 +15,13 @@ from enum import Enum
 logger = logging.getLogger(__name__)
 
 
-class RateLimitExceeded(Exception):
+class RateLimitError(Exception):
     """超过速率限制"""
 
     pass
 
 
-class QuotaExceeded(Exception):
+class QuotaError(Exception):
     """超过配额"""
 
     pass

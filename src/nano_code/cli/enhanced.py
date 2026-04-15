@@ -61,7 +61,7 @@ class EnhancedCLI(Cmd):
             try:
                 with open(self.history_file) as f:
                     self.history = json.load(f)
-            except:
+            except Exception:
                 self.history = []
         else:
             self.history = []
@@ -126,12 +126,12 @@ class EnhancedCLI(Cmd):
         """显示对话历史 - history [数量]"""
         try:
             limit = int(args.strip()) if args.strip() else 10
-        except:
+        except Exception:
             limit = 10
 
         history = self.history[-limit * 2 :]
 
-        for i, msg in enumerate(history):
+        for _i, msg in enumerate(history):
             role = "👤" if msg["role"] == "user" else "🤖"
             self.poutput(f"{role} {msg['content'][:50]}...")
 
@@ -282,7 +282,7 @@ class EnhancedCLI(Cmd):
                 try:
                     proc = psutil.Process(conn.pid)
                     self.poutput(f"{conn.laddr.port:<8} {proc.name()[:20]:<20} LISTEN")
-                except:
+                except Exception:
                     pass
 
     # ==================== 开发命令 ====================
