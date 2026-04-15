@@ -62,6 +62,20 @@ class ConversationManager:
     def list_conversations(self) -> list[Conversation]:
         return list(self._conversations.values())
 
+    def delete_conversation(self, conversation_id: str) -> bool:
+        """删除对话
+
+        Args:
+            conversation_id: 对话 ID
+
+        Returns:
+            是否成功删除
+        """
+        if conversation_id in self._conversations:
+            del self._conversations[conversation_id]
+            return True
+        return False
+
 
 class ConversationMemory:
     """对话记忆管理

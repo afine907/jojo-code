@@ -96,6 +96,20 @@ class ToolRegistry:
         """
         return list(self._tools.keys())
 
+    def unregister(self, name: str) -> bool:
+        """注销工具
+
+        Args:
+            name: 工具名称
+
+        Returns:
+            是否成功注销
+        """
+        if name in self._tools:
+            del self._tools[name]
+            return True
+        return False
+
 
 # 全局注册表实例
 _registry: ToolRegistry | None = None
