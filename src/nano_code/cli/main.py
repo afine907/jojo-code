@@ -29,6 +29,7 @@ from nano_code.cli.console import (  # noqa: E402
     session_stats,
     thinking_animation,
 )
+from nano_code.cli.modes import ModeManager, get_mode_manager  # noqa: E402
 from nano_code.core.config import get_settings  # noqa: E402
 from nano_code.memory.conversation import ConversationMemory  # noqa: E402
 
@@ -82,6 +83,9 @@ def run_interactive() -> None:
     # 获取当前模型
     current_model = get_current_model()
 
+    # 初始化模式管理器
+    mode_manager = get_mode_manager()
+
     # 初始化 prompt session（增强版）
     session: PromptSession[str] = PromptSession(
         history=FileHistory(str(settings.storage_path / "history.txt")),
@@ -91,10 +95,11 @@ def run_interactive() -> None:
     )
 
     console.print("\n[dim]💡 提示: 输入多行内容时，按 Tab 换行，Enter 发送[/dim]")
-    console.print("[dim]💡 输入 /help 查看所有命令[/dim]\n")
+    console.print("[dim]💡 输入 /help 查看所有命令[/dim]")
+    console.print("[dim]💡 按 F2 切换 Plan/Build 模式[/dim]\n")
 
     # 显示初始状态栏
-    print_status_bar(current_model)
+    print_status_bar(current_model, mode=mode_manager.current_mode)
     console.print()
 
     while True:
@@ -126,35 +131,52 @@ def run_interactive() -> None:
                 for msg in memory.get_context()
             ]
 
-            # 执行图（带思考动画）
-            with thinking_animation("Thinking"):
-                result = graph.invoke(state)
+            # 执行图（流式输出）
+            full_response = ""
+            processed_messages = 0  # 跟踪已处理的消息数，避免重复
+            console.print("\n[bold blue]🤖 Assistant:[/bold blue]")
 
-            # 提取响应
-            if result.get("messages"):
-                last_msg = result["messages"][-1]
-                if isinstance(last_msg, dict):
-                    response = last_msg.get("content", "")
-                else:
-                    response = getattr(last_msg, "content", "")
+            try:
+                with thinking_animation("Thinking"):
+                    for chunk in graph.stream(state):
+                        for node_name, node_output in chunk.items():
+                            if node_name == "thinking" and "messages" in node_output:
+                                messages = node_output["messages"]
+                                # 只处理新增的消息
+                                for msg in messages[processed_messages:]:
+                                    processed_messages += 1
+                                    if isinstance(msg, dict):
+                                        content = msg.get("content", "")
+                                    else:
+                                        content = getattr(msg, "content", "")
+                                    if content and isinstance(content, str):
+                                        full_response += content
+                            if node_name == "execute" and "tool_results" in node_output:
+                                for result in node_output["tool_results"]:
+                                    if result:
+                                        from nano_code.cli.console import print_tool_result
 
-                if response:
-                    # 尝试渲染 Markdown
+                                        print_tool_result(result)
+
+                # 流式完成后尝试渲染 Markdown
+                if full_response:
                     try:
-                        console.print("\n[bold blue]🤖 Assistant:[/bold blue]")
-                        console.print(Markdown(response))
+                        console.print(Markdown(full_response))
                     except Exception:
-                        console.print(f"\n[bold blue]🤖 Assistant:[/bold blue] {response}")
+                        console.print(f" {full_response}")
 
                     # 添加到记忆
-                    memory.add_message(AIMessage(content=response))
+                    memory.add_message(AIMessage(content=full_response))
+            except KeyboardInterrupt:
+                console.print("\n[yellow]⚠️ 已取消[/yellow]")
+                continue
 
             # 更新 token 统计
             token_count = memory.token_count()
             session_stats.total_tokens = token_count
 
             # 显示状态栏
-            print_status_bar(current_model)
+            print_status_bar(current_model, mode=mode_manager.current_mode)
 
         except KeyboardInterrupt:
             console.print("\n[yellow]⚠️ 已取消[/yellow]")
@@ -169,17 +191,26 @@ def run_interactive() -> None:
             console.print(f"[dim red]{traceback.format_exc()}[/dim red]")
 
 
-def handle_command(command: str, memory: ConversationMemory, model: str) -> bool:
+def handle_command(
+    command: str,
+    memory: ConversationMemory,
+    model: str,
+    mode_manager: ModeManager | None = None,
+) -> bool:
     """处理命令
 
     Args:
         command: 命令字符串
         memory: 记忆管理器
         model: 当前模型名称
+        mode_manager: 模式管理器
 
     Returns:
         是否继续运行（False 表示退出）
     """
+    if mode_manager is None:
+        mode_manager = get_mode_manager()
+
     cmd = command.strip().lower()
 
     if cmd in ("/exit", "/quit", "/q"):
