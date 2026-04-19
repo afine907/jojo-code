@@ -68,7 +68,15 @@ def thinking_node(state: AgentState) -> dict[str, Any]:
     tools = registry.get_langchain_tools()
     llm_with_tools = llm.bind_tools(tools) if tools else llm
 
+    # 支持流式响应
     response = llm_with_tools.invoke(messages)
+
+    # 如果是流式响应块，转换为完整响应
+    if hasattr(response, "content"):
+        if hasattr(response, "additional_kwargs"):
+            response = response
+        else:
+            pass
 
     # 处理工具调用
     tool_calls: list[dict[str, Any]] = []

@@ -21,6 +21,8 @@ from rich.status import Status
 from rich.syntax import Syntax
 from rich.table import Table
 
+from nano_code.cli.modes import AgentMode
+
 console = Console()
 
 # 为了向后兼容，提供别名
@@ -156,18 +158,29 @@ def thinking_animation(message: str = "Thinking") -> Generator[None, None, None]
         yield
 
 
-def print_status_bar(model: str = "unknown", stats: SessionStats | None = None) -> None:
+def print_status_bar(
+    model: str = "unknown",
+    stats: SessionStats | None = None,
+    mode: AgentMode = AgentMode.BUILD,
+) -> None:
     """打印状态栏
 
     Args:
         model: 当前模型名称
         stats: 会话统计（默认使用全局统计）
+        mode: 当前模式
     """
     if stats is None:
         stats = session_stats
 
-    # 创建状态信息
+    mode_str = f"[{mode.value.upper()}]"
+    if mode == AgentMode.PLAN:
+        mode_str = f"[yellow]{mode_str}[/yellow]"
+    else:
+        mode_str = f"[green]{mode_str}[/green]"
+
     info_parts = [
+        f"[bold]Mode:[/bold] {mode_str}",
         f"[bold]Model:[/bold] [cyan]{model}[/cyan]",
         f"[bold]Msgs:[/bold] {stats.message_count}",
         f"[bold]Tools:[/bold] {stats.tool_calls}",
