@@ -61,8 +61,10 @@ def thinking_node(state: AgentState) -> dict[str, Any]:
             messages.append(msg)
 
     # 添加工具结果到消息
-    for result in state["tool_results"]:
-        messages.append(ToolMessage(content=result, tool_call_id="tool_call"))
+    tool_calls = state.get("tool_calls", [])
+    for i, result in enumerate(state["tool_results"]):
+        tool_call_id = tool_calls[i].get("id", f"call_{i}") if i < len(tool_calls) else f"call_{i}"
+        messages.append(ToolMessage(content=result, tool_call_id=tool_call_id))
 
     # 调用 LLM（带工具绑定）
     tools = registry.get_langchain_tools()
@@ -70,13 +72,6 @@ def thinking_node(state: AgentState) -> dict[str, Any]:
 
     # 支持流式响应
     response = llm_with_tools.invoke(messages)
-
-    # 如果是流式响应块，转换为完整响应
-    if hasattr(response, "content"):
-        if hasattr(response, "additional_kwargs"):
-            response = response
-        else:
-            pass
 
     # 处理工具调用
     tool_calls: list[dict[str, Any]] = []
@@ -122,10 +117,13 @@ def execute_node(state: AgentState) -> dict[str, Any]:
 
     for tool_call in state["tool_calls"]:
         try:
+            if "name" not in tool_call or "args" not in tool_call:
+                results.append(f"Error: tool_call missing 'name' or 'args' key")
+                continue
             result = registry.execute(tool_call["name"], tool_call["args"])
             results.append(result)
         except Exception as e:
-            results.append(f"Error executing {tool_call['name']}: {e}")
+            results.append(f"Error executing {tool_call.get('name', 'unknown')}: {e}")
 
     return {
         "tool_results": results,

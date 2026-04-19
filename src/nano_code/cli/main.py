@@ -133,6 +133,7 @@ def run_interactive() -> None:
 
             # 执行图（流式输出）
             full_response = ""
+            processed_messages = 0  # 跟踪已处理的消息数，避免重复
             console.print("\n[bold blue]🤖 Assistant:[/bold blue]")
 
             try:
@@ -140,12 +141,15 @@ def run_interactive() -> None:
                     for chunk in graph.stream(state):
                         for node_name, node_output in chunk.items():
                             if node_name == "thinking" and "messages" in node_output:
-                                for msg in node_output["messages"]:
+                                messages = node_output["messages"]
+                                # 只处理新增的消息
+                                for msg in messages[processed_messages:]:
+                                    processed_messages += 1
                                     if isinstance(msg, dict):
                                         content = msg.get("content", "")
                                     else:
                                         content = getattr(msg, "content", "")
-                                    if content:
+                                    if content and isinstance(content, str):
                                         full_response += content
                             if node_name == "execute" and "tool_results" in node_output:
                                 for result in node_output["tool_results"]:
