@@ -118,7 +118,7 @@ def execute_node(state: AgentState) -> dict[str, Any]:
     for tool_call in state["tool_calls"]:
         try:
             if "name" not in tool_call or "args" not in tool_call:
-                results.append(f"Error: tool_call missing 'name' or 'args' key")
+                results.append("Error: tool_call missing 'name' or 'args' key")
                 continue
             result = registry.execute(tool_call["name"], tool_call["args"])
             results.append(result)
