@@ -1,9 +1,11 @@
 """工具注册中心"""
 
+from collections.abc import Callable
 from typing import Any
 
 from langchain_core.tools import BaseTool
 
+from nano_code.security.permission import PermissionResult
 from nano_code.tools.file_tools import edit_file, list_directory, read_file, write_file
 from nano_code.tools.search_tools import glob_search, grep_search
 from nano_code.tools.shell_tools import run_command
@@ -12,15 +14,39 @@ from nano_code.tools.shell_tools import run_command
 Tool = BaseTool
 tool = BaseTool  # 装饰器兼容
 
+# 确认回调类型
+ConfirmCallback = Callable[[PermissionResult], bool]
+
+
+class PermissionError(Exception):
+    """权限错误"""
+
+    def __init__(self, message: str, result: PermissionResult | None = None):
+        super().__init__(message)
+        self.result = result
+
 
 class ToolRegistry:
     """工具注册中心
 
     管理所有可用工具，提供注册、获取、执行功能。
+    支持权限检查和用户确认。
     """
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        permission_manager: Any = None,
+        confirm_callback: ConfirmCallback | None = None,
+    ) -> None:
+        """初始化工具注册中心
+
+        Args:
+            permission_manager: 权限管理器实例
+            confirm_callback: 用户确认回调函数
+        """
         self._tools: dict[str, BaseTool] = {}
+        self._permission_manager = permission_manager
+        self._confirm_callback = confirm_callback
         self._register_default_tools()
 
     def _register_default_tools(self) -> None:
@@ -72,7 +98,24 @@ class ToolRegistry:
 
         Raises:
             ValueError: 工具不存在
+            PermissionError: 权限拒绝
         """
+        # 权限检查
+        if self._permission_manager is not None:
+            result = self._permission_manager.check(name, args)
+
+            if result.denied:
+                raise PermissionError(f"权限拒绝: {result.reason}", result)
+
+            if result.needs_confirm:
+                if self._confirm_callback is not None:
+                    approved = self._confirm_callback(result)
+                    if not approved:
+                        raise PermissionError("用户拒绝执行", result)
+                else:
+                    raise PermissionError(f"操作需要确认: {result.reason}", result)
+
+        # 执行工具
         tool = self.get(name)
         if tool is None:
             raise ValueError(f"Unknown tool: {name}")
