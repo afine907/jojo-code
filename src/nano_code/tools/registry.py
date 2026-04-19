@@ -22,6 +22,7 @@ from nano_code.tools.performance_tools import (
 )
 from nano_code.tools.search_tools import glob_search, grep_search
 from nano_code.tools.shell_tools import run_command
+from nano_code.tools.web_tools import web_search
 
 # 为了向后兼容，提供别名
 Tool = BaseTool
@@ -75,6 +76,8 @@ class ToolRegistry:
             # 搜索工具
             grep_search,
             glob_search,
+            # Web 搜索工具
+            web_search,
             # Shell 工具
             run_command,
             # 代码分析工具
