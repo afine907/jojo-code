@@ -180,6 +180,11 @@ def print_status_bar(model: str = "unknown", stats: SessionStats | None = None) 
     console.print("\n" + " │ ".join(info_parts))
 
 
+def print_mode_label(mode: str) -> None:
+    """打印当前模式标签（简易 UI 支持）"""
+    console.print(f"[bold]Mode:[/bold] [cyan]{mode}[/cyan]")
+
+
 def print_session_stats(model: str = "unknown") -> None:
     """打印详细的会话统计"""
     stats = session_stats
