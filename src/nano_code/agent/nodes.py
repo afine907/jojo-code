@@ -5,6 +5,7 @@ from typing import Any, Literal
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, ToolMessage
 
+from nano_code.agent.modes import PlanMode
 from nano_code.agent.state import AgentState
 from nano_code.tools.registry import ToolRegistry
 
@@ -44,6 +45,9 @@ def thinking_node(state: AgentState) -> dict[str, Any]:
     llm = get_llm()
     registry = get_tool_registry()
 
+    # 读取模式，PlanMode.BUILD 为构建模式，PlanMode.PLAN 为计划模式
+    mode = state.get("mode", PlanMode.BUILD.value)
+
     # 转换消息格式
     messages: list[BaseMessage] = []
     for msg in state["messages"]:
@@ -64,9 +68,13 @@ def thinking_node(state: AgentState) -> dict[str, Any]:
     for result in state["tool_results"]:
         messages.append(ToolMessage(content=result, tool_call_id="tool_call"))
 
-    # 调用 LLM（带工具绑定）
+    # 调用 LLM（根据模式决定是否绑定工具）
     tools = registry.get_langchain_tools()
-    llm_with_tools = llm.bind_tools(tools) if tools else llm
+    if mode == PlanMode.PLAN.value:
+        # Plan 模式：不绑定工具，LLM 只给出计划文本
+        llm_with_tools = llm
+    else:
+        llm_with_tools = llm.bind_tools(tools) if tools else llm
 
     response = llm_with_tools.invoke(messages)
 
@@ -81,6 +89,30 @@ def thinking_node(state: AgentState) -> dict[str, Any]:
                     "id": tc.get("id", "call_" + str(len(tool_calls))),
                 }
             )
+
+    # Plan 模式额外处理：如果是 PLAN 模式，且有写操作的 tool_calls，需要阻止执行并给出计划
+    if mode == PlanMode.PLAN.value and tool_calls:
+        # 过滤出写操作（需要阻止执行）
+        write_tools = [
+            tc for tc in tool_calls if registry._tool_categories.get(tc["name"], "read") == "write"
+        ]
+        if write_tools:
+            plan_ops = []
+            for tc in write_tools:
+                plan_ops.append(f"{tc['name']}({tc['args']})")
+            plan_text = (
+                "Plan 模式阻止写操作。将要执行的写操作: "
+                + ", ".join(plan_ops)
+                + ". 这是只读计划，实际执行将切换回 BUILD 模式或继续分析。"
+            )
+            new_messages: list[dict[str, Any]] = [{"role": "assistant", "content": plan_text}]
+            return {
+                "messages": new_messages,
+                "tool_calls": [],
+                "tool_results": [],
+                "is_complete": True,
+                "iteration": state["iteration"] + 1,
+            }
 
     # 判断是否完成
     is_complete = len(tool_calls) == 0

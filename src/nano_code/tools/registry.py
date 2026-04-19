@@ -45,6 +45,8 @@ class ToolRegistry:
             confirm_callback: 用户确认回调函数
         """
         self._tools: dict[str, BaseTool] = {}
+        # 记录工具分类：read/write
+        self._tool_categories: dict[str, str] = {}
         self._permission_manager = permission_manager
         self._confirm_callback = confirm_callback
         self._register_default_tools()
@@ -66,6 +68,12 @@ class ToolRegistry:
 
         for tool in default_tools:
             self._tools[tool.name] = tool
+            # 简单分类：只读工具 vs 写操作工具
+            name = getattr(tool, "name", "")
+            if name in {"write_file", "edit_file", "run_command"}:
+                self._tool_categories[name] = "write"
+            else:
+                self._tool_categories[name] = "read"
 
     def register(self, tool: BaseTool) -> None:
         """注册新工具
@@ -130,6 +138,17 @@ class ToolRegistry:
             工具列表
         """
         return list(self._tools.values())
+
+    def is_write_tool(self, name: str) -> bool:
+        """判断工具是否为写操作工具
+
+        Args:
+            name: 工具名称
+
+        Returns:
+            是否是写操作工具
+        """
+        return self._tool_categories.get(name) == "write"
 
     def list_tools(self) -> list[str]:
         """列出所有工具名称

@@ -4,6 +4,8 @@ from typing import Annotated, Any
 
 from typing_extensions import TypedDict
 
+from nano_code.agent.modes import PlanMode
+
 
 def merge_lists(left: list[Any] | None, right: list[Any] | None) -> list[Any]:
     """合并两个列表（用于 Annotated reducer）"""
@@ -30,6 +32,8 @@ class AgentState(TypedDict):
     tool_results: list[str]
     is_complete: bool
     iteration: int
+    # 模式控制：build / plan
+    mode: str
 
 
 class StateManager:
@@ -48,7 +52,7 @@ class StateManager:
         self._state.clear()
 
 
-def create_initial_state(user_message: str) -> AgentState:
+def create_initial_state(user_message: str, mode: str = PlanMode.BUILD.value) -> AgentState:
     """创建初始状态
 
     Args:
@@ -63,4 +67,5 @@ def create_initial_state(user_message: str) -> AgentState:
         tool_results=[],
         is_complete=False,
         iteration=0,
+        mode=mode,
     )
