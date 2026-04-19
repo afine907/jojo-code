@@ -125,6 +125,7 @@ class TestHistoryCompleter:
 
     def test_initialization(self):
         """测试初始化"""
+
         def callback():
             return ["/help", "/stats"]
 
@@ -134,6 +135,7 @@ class TestHistoryCompleter:
 
     def test_exact_match(self):
         """测试精确匹配"""
+
         def callback():
             return ["help", "stats", "clear"]
 
@@ -144,6 +146,7 @@ class TestHistoryCompleter:
 
     def test_prefix_match(self):
         """测试前缀匹配"""
+
         def callback():
             return ["help", "stats", "clear"]
 
@@ -154,6 +157,7 @@ class TestHistoryCompleter:
 
     def test_no_match(self):
         """测试无匹配"""
+
         def callback():
             return ["help"]
 
@@ -202,6 +206,7 @@ class TestNanoCompleter:
 
     def test_history_integration(self):
         """测试历史记录集成"""
+
         def callback():
             return ["/help", "/stats"]
 
