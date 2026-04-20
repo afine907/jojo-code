@@ -156,7 +156,7 @@ class TestMain:
         mock_run.side_effect = SystemExit(0)
 
         with pytest.raises(SystemExit):
-            main()
+            main(args=[])  # 传入空参数列表
 
         mock_run.assert_called_once()
 
@@ -166,7 +166,7 @@ class TestMain:
         mock_run.side_effect = Exception("Test error")
 
         with pytest.raises(SystemExit) as exc_info:
-            main()
+            main(args=[])  # 传入空参数列表
 
         assert exc_info.value.code == 1
 

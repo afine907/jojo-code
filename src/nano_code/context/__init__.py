@@ -1,11 +1,7 @@
-"""Project context utilities.
-
-This package provides helpers to detect the project root and to parse a
-project's AGENTS.md manifest. It also exposes a simple initializer for
-setting up a minimal AGENTS.md when running `/init`.
-"""
+"""Context package exports"""
 
 from .init import init_project_context
+from .lazy_ignore import LazyIgnoreManager
 from .project import (
     find_project_root,
     load_project_context,
@@ -17,4 +13,5 @@ __all__ = [
     "load_project_context",
     "parse_agents_md",
     "init_project_context",
+    "LazyIgnoreManager",
 ]
