@@ -36,39 +36,13 @@ export function useAgent(): UseAgentReturn {
 
   const clientRef = useRef<AgentClient | null>(null);
   const currentResponseRef = useRef<string>("");
-
-  // 初始化客户端
-  useEffect(() => {
-    const initClient = async () => {
-      try {
-        const client = new AgentClient();
-        await client.connect();
-        clientRef.current = client;
-
-        // 获取配置
-        const cfg = await client.getConfig();
-        setConfig(cfg);
-        setModel(cfg.model);
-
-        // 监听流式事件
-        client.on("stream", handleStreamEvent);
-
-        console.log("Agent client connected");
-      } catch (err) {
-        setError(`Failed to connect: ${err}`);
-        setStatus("error");
-      }
-    };
-
-    initClient();
-
-    return () => {
-      clientRef.current?.close();
-    };
-  }, []);
+  const isStreamingRef = useRef(false);
+  const isMountedRef = useRef(true);
 
   // 处理流式事件
   const handleStreamEvent = useCallback((event: StreamEvent) => {
+    if (!isMountedRef.current) return;
+
     switch (event.type) {
       case "thinking":
         setStatus("thinking");
@@ -110,6 +84,7 @@ export function useAgent(): UseAgentReturn {
 
       case "done":
         setIsStreaming(false);
+        isStreamingRef.current = false;
         setStatus("idle");
         setCurrentTool(undefined);
         currentResponseRef.current = "";
@@ -117,6 +92,7 @@ export function useAgent(): UseAgentReturn {
 
       case "error":
         setIsStreaming(false);
+        isStreamingRef.current = false;
         setStatus("error");
         setError(event.content);
         setCurrentTool(undefined);
@@ -125,10 +101,65 @@ export function useAgent(): UseAgentReturn {
     }
   }, []);
 
+  // 初始化客户端
+  useEffect(() => {
+    isMountedRef.current = true;
+
+    const initClient = async () => {
+      try {
+        const client = new AgentClient();
+        await client.connect();
+        
+        if (!isMountedRef.current) {
+          client.close();
+          return;
+        }
+        
+        clientRef.current = client;
+
+        // 获取配置
+        const cfg = await client.getConfig();
+        if (isMountedRef.current) {
+          setConfig(cfg);
+          setModel(cfg.model);
+        }
+
+        // 监听流式事件
+        client.on("stream", handleStreamEvent);
+        
+        // 监听错误
+        client.on("error", (err: Error) => {
+          if (isMountedRef.current) {
+            setError(`Server error: ${err.message}`);
+            setStatus("error");
+          }
+        });
+
+        console.log("Agent client connected");
+      } catch (err) {
+        if (isMountedRef.current) {
+          setError(`Failed to connect: ${err}`);
+          setStatus("error");
+        }
+      }
+    };
+
+    initClient();
+
+    return () => {
+      isMountedRef.current = false;
+      if (clientRef.current) {
+        clientRef.current.removeAllListeners();
+        clientRef.current.close();
+        clientRef.current = null;
+      }
+    };
+  }, [handleStreamEvent]);
+
   // 发送消息
   const sendMessage = useCallback(
     async (prompt: string) => {
-      if (!clientRef.current || isStreaming) {
+      if (!clientRef.current || isStreamingRef.current) {
         return;
       }
 
@@ -143,6 +174,7 @@ export function useAgent(): UseAgentReturn {
 
       // 重置状态
       setIsStreaming(true);
+      isStreamingRef.current = true;
       setStatus("thinking");
       setError(undefined);
       currentResponseRef.current = "";
@@ -150,12 +182,15 @@ export function useAgent(): UseAgentReturn {
       try {
         await clientRef.current.stream(prompt);
       } catch (err) {
-        setIsStreaming(false);
-        setStatus("error");
-        setError(`Failed to send message: ${err}`);
+        if (isMountedRef.current) {
+          setIsStreaming(false);
+          isStreamingRef.current = false;
+          setStatus("error");
+          setError(`Failed to send message: ${err}`);
+        }
       }
     },
-    [isStreaming]
+    []
   );
 
   // 清空消息
@@ -166,23 +201,36 @@ export function useAgent(): UseAgentReturn {
 
   // 重新连接
   const reconnect = useCallback(async () => {
-    clientRef.current?.close();
-    clientRef.current = null;
+    if (clientRef.current) {
+      clientRef.current.removeAllListeners();
+      clientRef.current.close();
+      clientRef.current = null;
+    }
 
     try {
       const client = new AgentClient();
       await client.connect();
       clientRef.current = client;
       client.on("stream", handleStreamEvent);
+      client.on("error", (err: Error) => {
+        if (isMountedRef.current) {
+          setError(`Server error: ${err.message}`);
+          setStatus("error");
+        }
+      });
 
       const cfg = await client.getConfig();
-      setConfig(cfg);
-      setModel(cfg.model);
-      setStatus("idle");
-      setError(undefined);
+      if (isMountedRef.current) {
+        setConfig(cfg);
+        setModel(cfg.model);
+        setStatus("idle");
+        setError(undefined);
+      }
     } catch (err) {
-      setError(`Failed to reconnect: ${err}`);
-      setStatus("error");
+      if (isMountedRef.current) {
+        setError(`Failed to reconnect: ${err}`);
+        setStatus("error");
+      }
     }
   }, [handleStreamEvent]);
 

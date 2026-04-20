@@ -9,7 +9,10 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsx src/index.tsx",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "ink": "^4.4.1",
@@ -18,9 +21,12 @@
     "react": "^18.2.0"
   },
   "devDependencies": {
+    "@testing-library/react": "^14.2.0",
     "@types/node": "^20.11.0",
     "@types/react": "^18.2.0",
-    "tsx": "^4.21.0",
-    "typescript": "^5.3.0"
+    "ink-testing-library": "^3.0.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.0",
+    "vitest": "^2.0.0"
   }
 }

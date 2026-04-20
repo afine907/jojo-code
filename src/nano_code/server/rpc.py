@@ -3,6 +3,7 @@
 
 import asyncio
 import json
+import signal
 import sys
 from typing import Any, Optional
 
@@ -16,6 +17,7 @@ class JSONRPCServer:
         self.graph = None
         self.registry = None
         self.settings = None
+        self._running = True
         self._initialize()
 
     def _initialize(self):
@@ -41,6 +43,21 @@ class JSONRPCServer:
         notification = JSONRPCNotification(method=method, params=params)
         sys.stdout.write(json.dumps(notification.to_dict()) + "\n")
         sys.stdout.flush()
+
+    def _validate_params(
+        self, params: dict, required: list[str]
+    ) -> tuple[bool, Optional[str]]:
+        """验证必需参数
+
+        Returns:
+            (is_valid, error_message)
+        """
+        for key in required:
+            if key not in params:
+                return False, f"Missing required parameter: {key}"
+            if params[key] is None:
+                return False, f"Parameter '{key}' cannot be None"
+        return True, None
 
     async def handle_request(self, request: JSONRPCRequest) -> None:
         """处理 JSON-RPC 请求"""
@@ -78,7 +95,21 @@ class JSONRPCServer:
 
     async def _handle_agent_stream(self, params: dict) -> None:
         """流式对话处理"""
+        # 输入验证
+        is_valid, error = self._validate_params(params, ["prompt"])
+        if not is_valid:
+            self._send_notification(
+                "stream", StreamEvent(type="error", content=error).to_dict()
+            )
+            return
+
         prompt = params.get("prompt", "")
+        if not prompt.strip():
+            self._send_notification(
+                "stream", StreamEvent(type="error", content="Prompt cannot be empty").to_dict()
+            )
+            return
+
         mode = params.get("mode", "build")
 
         if not self.graph:
@@ -92,7 +123,14 @@ class JSONRPCServer:
         state = create_initial_state(prompt, mode=mode)
 
         try:
+            # 使用单独的状态跟踪处理进度
+            processed_tool_calls = set()
+            
             for chunk in self.graph.stream(state):
+                # 检查是否应该停止
+                if not self._running:
+                    break
+                    
                 for node_name, node_output in chunk.items():
                     if node_name == "thinking":
                         # 响应内容
@@ -107,16 +145,19 @@ class JSONRPCServer:
                                     "stream", StreamEvent(type="response", content=content).to_dict()
                                 )
 
-                        # 工具调用
+                        # 工具调用 - 使用 ID 去重
                         for tc in node_output.get("tool_calls", []):
-                            self._send_notification(
-                                "stream",
-                                StreamEvent(
-                                    type="tool_call",
-                                    content=f"Calling {tc['name']}...",
-                                    metadata={"toolName": tc["name"], "toolArgs": tc["args"]},
-                                ).to_dict(),
-                            )
+                            tc_id = tc.get("id", f"{tc['name']}_{id(tc['args'])}")
+                            if tc_id not in processed_tool_calls:
+                                processed_tool_calls.add(tc_id)
+                                self._send_notification(
+                                    "stream",
+                                    StreamEvent(
+                                        type="tool_call",
+                                        content=f"Calling {tc['name']}...",
+                                        metadata={"toolName": tc["name"], "toolArgs": tc["args"]},
+                                    ).to_dict(),
+                                )
 
                     elif node_name == "execute":
                         for result in node_output.get("tool_results", []):
@@ -149,6 +190,11 @@ class JSONRPCServer:
 
     async def _handle_tool_execute(self, params: dict) -> dict:
         """执行工具"""
+        # 输入验证
+        is_valid, error = self._validate_params(params, ["name"])
+        if not is_valid:
+            return {"success": False, "error": error}
+
         if not self.registry:
             return {"success": False, "error": "Registry not initialized"}
 
@@ -175,13 +221,24 @@ class JSONRPCServer:
         # TODO: 实现配置持久化
         return {"success": True}
 
+    def _setup_signal_handlers(self):
+        """设置信号处理器"""
+        signal.signal(signal.SIGINT, self._signal_handler)
+        signal.signal(signal.SIGTERM, self._signal_handler)
+
+    def _signal_handler(self, signum, frame):
+        """信号处理"""
+        self._running = False
+
     async def run(self) -> None:
         """运行服务器"""
         print("Nano Code JSON-RPC Server started", file=sys.stderr)
+        
+        self._setup_signal_handlers()
 
         loop = asyncio.get_event_loop()
 
-        while True:
+        while self._running:
             try:
                 line = await loop.run_in_executor(None, sys.stdin.readline)
                 if not line:
@@ -203,6 +260,8 @@ class JSONRPCServer:
                 break
             except Exception as e:
                 print(f"Error: {e}", file=sys.stderr)
+        
+        print("Nano Code JSON-RPC Server stopped", file=sys.stderr)
 
 
 def main():

@@ -18,19 +18,44 @@ interface JSONRPCRequest {
 interface PendingRequest {
   resolve: (value: unknown) => void;
   reject: (error: Error) => void;
+  timeout: NodeJS.Timeout;
 }
+
+export type ConnectionState = "disconnected" | "connecting" | "connected" | "error";
 
 export class AgentClient extends EventEmitter {
   private process: ChildProcess | null = null;
   private requestId = 0;
   private pendingRequests = new Map<string, PendingRequest>();
   private buffer = "";
+  private _connectionState: ConnectionState = "disconnected";
+  private connectionTimeout = 5000; // 5 seconds
+  private requestTimeout = 60000; // 60 seconds
+
+  /**
+   * 获取连接状态
+   */
+  get connectionState(): ConnectionState {
+    return this._connectionState;
+  }
 
   /**
    * 连接到 Python Server
    */
   async connect(): Promise<void> {
+    if (this._connectionState === "connected") {
+      return;
+    }
+
+    this._connectionState = "connecting";
+
     return new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        reject(new Error("Connection timeout"));
+        this._connectionState = "error";
+        this.process?.kill();
+      }, this.connectionTimeout);
+
       // 启动 Python Server
       this.process = spawn("python", ["-m", "nano_code.server.rpc"], {
         stdio: ["pipe", "pipe", "pipe"],
@@ -44,23 +69,33 @@ export class AgentClient extends EventEmitter {
 
       // 处理 stderr (日志)
       this.process.stderr?.on("data", (data: Buffer) => {
-        console.error("[Server]", data.toString().trim());
+        const message = data.toString().trim();
+        console.error("[Server]", message);
+        
+        // 检测服务器就绪
+        if (message.includes("started")) {
+          clearTimeout(timeoutId);
+          this._connectionState = "connected";
+          resolve();
+        }
       });
 
       // 处理错误
       this.process.on("error", (error: Error) => {
+        clearTimeout(timeoutId);
+        this._connectionState = "error";
+        this.emit("error", error);
         reject(error);
       });
 
       // 处理退出
       this.process.on("exit", (code) => {
+        this._connectionState = "disconnected";
+        this.emit("disconnected", code);
         if (code !== 0 && code !== null) {
           console.error(`Server exited with code ${code}`);
         }
       });
-
-      // 等待服务器启动
-      setTimeout(resolve, 100);
     });
   }
 
@@ -85,6 +120,7 @@ export class AgentClient extends EventEmitter {
         else if (response.id) {
           const pending = this.pendingRequests.get(response.id);
           if (pending) {
+            clearTimeout(pending.timeout);
             this.pendingRequests.delete(response.id);
             if (response.error) {
               pending.reject(new Error(response.error.message));
@@ -93,8 +129,9 @@ export class AgentClient extends EventEmitter {
             }
           }
         }
-      } catch {
-        // 忽略解析错误
+      } catch (e) {
+        // 记录解析错误
+        console.error("[Client] Failed to parse response:", line, e);
       }
     }
   }
@@ -106,6 +143,10 @@ export class AgentClient extends EventEmitter {
     method: string,
     params: Record<string, unknown> = {}
   ): Promise<T> {
+    if (this._connectionState !== "connected") {
+      throw new Error("Not connected to server");
+    }
+
     return new Promise((resolve, reject) => {
       const id = String(++this.requestId);
       const request: JSONRPCRequest = {
@@ -115,20 +156,18 @@ export class AgentClient extends EventEmitter {
         params,
       };
 
+      const timeout = setTimeout(() => {
+        this.pendingRequests.delete(id);
+        reject(new Error(`Request timeout: ${method}`));
+      }, this.requestTimeout);
+
       this.pendingRequests.set(id, {
         resolve: resolve as (value: unknown) => void,
         reject,
+        timeout,
       });
 
       this.process?.stdin?.write(JSON.stringify(request) + "\n");
-
-      // 超时
-      setTimeout(() => {
-        if (this.pendingRequests.has(id)) {
-          this.pendingRequests.delete(id);
-          reject(new Error("Request timeout"));
-        }
-      }, 60000);
     });
   }
 
@@ -178,18 +217,23 @@ export class AgentClient extends EventEmitter {
    * 关闭连接
    */
   close(): void {
-    this.process?.kill();
-    this.process = null;
+    // 清理所有 pending 请求
+    for (const [id, pending] of this.pendingRequests) {
+      clearTimeout(pending.timeout);
+      pending.reject(new Error("Connection closed"));
+    }
     this.pendingRequests.clear();
+    
+    // 清理 buffer
+    this.buffer = "";
+    
+    // 终止进程
+    if (this.process) {
+      this.process.kill("SIGTERM");
+      this.process = null;
+    }
+    
+    this._connectionState = "disconnected";
+    this.removeAllListeners();
   }
-}
-
-// 导出单例
-let _client: AgentClient | null = null;
-
-export function getAgentClient(): AgentClient {
-  if (!_client) {
-    _client = new AgentClient();
-  }
-  return _client;
 }

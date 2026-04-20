@@ -1,7 +1,5 @@
-export { AgentClient, getAgentClient } from "./rpc.js";
+export { AgentClient } from "./rpc.js";
 export type {
-  JSONRPCRequest,
-  JSONRPCResponse,
   StreamEvent,
   StreamEventType,
   Tool,

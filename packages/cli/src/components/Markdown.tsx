@@ -38,8 +38,8 @@ export function Markdown({ content }: MarkdownProps) {
             paddingX={1}
             marginBottom={1}
           >
-            {codeLang && <Text dimColor>{codeLang}</Text>}
-            <Text color="cyan">{code}</Text>
+            {codeLang && <Text key={`lang-${codeKey}`} dimColor>{codeLang}</Text>}
+            <Text key={`code-content-${codeKey}`} color="cyan">{code}</Text>
           </Box>
         );
 

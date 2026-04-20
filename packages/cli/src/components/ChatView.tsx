@@ -8,6 +8,15 @@ export interface ChatViewProps {
 }
 
 export function ChatView({ messages, isStreaming }: ChatViewProps) {
+  // 显示 thinking 指示器
+  if (isStreaming && messages.length === 0) {
+    return (
+      <Box flexDirection="column" flexGrow={1}>
+        <Text dimColor>Thinking...</Text>
+      </Box>
+    );
+  }
+
   if (messages.length === 0) {
     return (
       <Box
