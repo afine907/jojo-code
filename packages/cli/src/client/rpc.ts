@@ -57,8 +57,13 @@ export class AgentClient extends EventEmitter {
       }, this.connectionTimeout);
 
       // 启动 Python Server
-      this.process = spawn("python", ["-m", "nano_code.server.rpc"], {
+      const pythonPath = process.env.PYTHON_PATH || "python";
+      this.process = spawn(pythonPath, ["-m", "nano_code.server.rpc"], {
         stdio: ["pipe", "pipe", "pipe"],
+        env: {
+          ...process.env,
+          PYTHONPATH: process.env.PYTHONPATH || "",
+        },
       });
 
       // 处理 stdout

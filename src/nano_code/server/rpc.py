@@ -5,7 +5,7 @@ import asyncio
 import json
 import signal
 import sys
-from typing import Any, Optional
+from typing import Any, Optional, List, Tuple
 
 from .protocol import JSONRPCRequest, JSONRPCResponse, JSONRPCNotification, StreamEvent
 
@@ -45,8 +45,8 @@ class JSONRPCServer:
         sys.stdout.flush()
 
     def _validate_params(
-        self, params: dict, required: list[str]
-    ) -> tuple[bool, Optional[str]]:
+        self, params: dict, required: List[str]
+    ) -> Tuple[bool, Optional[str]]:
         """验证必需参数
 
         Returns:
