@@ -19,7 +19,6 @@ export function InputBox({ onSubmit, disabled, mode }: InputBoxProps) {
     // Tab 切换多行模式
     if (key.tab) {
       if (multiline) {
-        // 在多行模式下，Tab 添加新行
         setLines([...lines, input]);
         setInput('');
       } else {
@@ -30,6 +29,7 @@ export function InputBox({ onSubmit, disabled, mode }: InputBoxProps) {
 
     // Enter 提交
     if (key.return) {
+      console.log('[DEBUG] Enter pressed, multiline:', multiline, 'input:', input);
       if (multiline && input) {
         // 多行模式下，Enter 换行
         setLines([...lines, input]);
@@ -39,7 +39,9 @@ export function InputBox({ onSubmit, disabled, mode }: InputBoxProps) {
         const finalInput = multiline 
           ? [...lines, input].join('\n')
           : input;
+        console.log('[DEBUG] finalInput:', finalInput);
         if (finalInput.trim()) {
+          console.log('[DEBUG] Calling onSubmit');
           onSubmit(finalInput.trim());
           setInput('');
           setLines([]);

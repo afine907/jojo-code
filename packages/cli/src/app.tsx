@@ -25,7 +25,7 @@ export interface ToolCall {
 export function App() {
   const { exit } = useApp();
   const [mode, setMode] = useState<Mode>('build');
-  const [showHelp, setShowHelp] = useState(false);
+  const [inputActive, setInputActive] = useState(true);
   
   const {
     messages,
@@ -36,19 +36,6 @@ export function App() {
     sendMessage,
     clearHistory,
   } = useAgent();
-
-  // 键盘快捷键
-  useInput((input, key) => {
-    // F2 切换模式
-    if (key.escape && input === '') {
-      setMode(m => m === 'plan' ? 'build' : 'plan');
-    }
-    
-    // Ctrl+D 退出
-    if (key.ctrl && input === 'd') {
-      exit();
-    }
-  });
 
   const handleSubmit = useCallback(async (input: string) => {
     if (input.startsWith('/')) {
@@ -63,7 +50,7 @@ export function App() {
     
     switch (command) {
       case '/help':
-        setShowHelp(true);
+        // TODO: show help
         break;
       case '/clear':
         clearHistory();
@@ -73,10 +60,24 @@ export function App() {
         exit();
         break;
       default:
-        // 未知命令
         break;
     }
   };
+
+  // 全局快捷键 (当输入框不活跃时)
+  useInput((input, key) => {
+    if (inputActive) return; // 输入框活跃时不处理
+    
+    // Ctrl+D 退出
+    if (key.ctrl && input === 'd') {
+      exit();
+    }
+    
+    // F2 切换模式
+    if (key.escape) {
+      setMode(m => m === 'plan' ? 'build' : 'plan');
+    }
+  }, { isActive: !inputActive });
 
   return (
     <Box flexDirection="column" height="100%">
