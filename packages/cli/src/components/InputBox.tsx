@@ -17,8 +17,8 @@ export function InputBox({ onSubmit, disabled, mode, onToggleMode }: InputBoxPro
   useInput((char, key) => {
     if (disabled) return;
 
-    // Escape 或 Ctrl+M 切换 Plan/Build 模式
-    if (key.escape || (key.ctrl && char === 'm')) {
+    // Alt+M 切换 Plan/Build 模式
+    if (key.meta && char === 'm') {
       onToggleMode();
       return;
     }
@@ -114,7 +114,7 @@ export function InputBox({ onSubmit, disabled, mode, onToggleMode }: InputBoxPro
         </Text>
         <Text>{input}</Text>
         {!input && !multiline && (
-          <Text dimColor>(Tab多行, Esc切换模式)</Text>
+          <Text dimColor>(Tab多行, Alt+M切换模式)</Text>
         )}
         <Text backgroundColor="cyan"> </Text>
       </Box>
