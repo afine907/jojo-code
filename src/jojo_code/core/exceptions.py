@@ -4,7 +4,7 @@
 class NanoCodeError(Exception):
     """基础异常类
 
-    所有 nano-code 异常的基类，提供统一的错误消息和提示格式。
+    所有 jojo-code 异常的基类，提供统一的错误消息和提示格式。
 
     Attributes:
         message: 错误消息

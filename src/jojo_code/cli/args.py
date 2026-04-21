@@ -13,19 +13,19 @@ def create_parser() -> argparse.ArgumentParser:
         配置好的 ArgumentParser
     """
     parser = argparse.ArgumentParser(
-        prog="nano-code",
+        prog="jojo-code",
         description=(
             "A mini coding agent built with LangGraph - Learn Agent architecture through practice"
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 示例:
-  nano-code                    启动交互式会话
-  nano-code --version          显示版本
-  nano-code --help             显示帮助
-  nano-code -p "分析这个项目"   非交互模式执行
-  nano-code --model gpt-4o     指定模型
-  nano-code --config .env      使用指定配置文件
+  jojo-code                    启动交互式会话
+  jojo-code --version          显示版本
+  jojo-code --help             显示帮助
+  jojo-code -p "分析这个项目"   非交互模式执行
+  jojo-code --model gpt-4o     指定模型
+  jojo-code --config .env      使用指定配置文件
         """,
     )
 

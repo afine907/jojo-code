@@ -51,9 +51,9 @@ class ConfigWizard:
         """初始化配置向导
 
         Args:
-            config_path: 配置文件路径，默认为 ~/.nano-code/.env
+            config_path: 配置文件路径，默认为 ~/.jojo-code/.env
         """
-        self.config_path = config_path or (Path.home() / ".nano-code" / ".env")
+        self.config_path = config_path or (Path.home() / ".jojo-code" / ".env")
         self.config_path.parent.mkdir(parents=True, exist_ok=True)
 
         self.api_key: str | None = None
