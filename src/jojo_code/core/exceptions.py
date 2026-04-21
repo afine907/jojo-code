@@ -1,7 +1,7 @@
 """统一异常层次结构"""
 
 
-class NanoCodeError(Exception):
+class JojoCodeError(Exception):
     """基础异常类
 
     所有 jojo-code 异常的基类，提供统一的错误消息和提示格式。
@@ -23,7 +23,7 @@ class NanoCodeError(Exception):
         return self.message
 
 
-class ConfigError(NanoCodeError):
+class ConfigError(JojoCodeError):
     """配置错误
 
     当配置缺失、无效或无法加载时抛出。
@@ -32,7 +32,7 @@ class ConfigError(NanoCodeError):
     pass
 
 
-class LLMError(NanoCodeError):
+class LLMError(JojoCodeError):
     """LLM 调用错误
 
     当 LLM API 调用失败时抛出。
@@ -41,7 +41,7 @@ class LLMError(NanoCodeError):
     pass
 
 
-class ToolError(NanoCodeError):
+class ToolError(JojoCodeError):
     """工具执行错误
 
     当工具执行失败时抛出。
@@ -50,7 +50,7 @@ class ToolError(NanoCodeError):
     pass
 
 
-class SecurityError(NanoCodeError):
+class SecurityError(JojoCodeError):
     """安全错误
 
     当安全检查失败时抛出。
@@ -59,7 +59,7 @@ class SecurityError(NanoCodeError):
     pass
 
 
-class ValidationError(NanoCodeError):
+class ValidationError(JojoCodeError):
     """验证错误
 
     当输入验证失败时抛出。
