@@ -6,14 +6,15 @@ allowing TypeScript CLI to interact with Python Agent core.
 
 import json
 import sys
-from typing import Any, Callable, Generator
+from collections.abc import Callable
 from dataclasses import dataclass
-from functools import wraps
+from typing import Any
 
 
 @dataclass
 class JsonRpcRequest:
     """JSON-RPC 请求"""
+
     jsonrpc: str
     id: str | int
     method: str
@@ -23,6 +24,7 @@ class JsonRpcRequest:
 @dataclass
 class JsonRpcResponse:
     """JSON-RPC 响应"""
+
     jsonrpc: str = "2.0"
     id: str | int | None = None
     result: Any = None
@@ -46,9 +48,11 @@ class JsonRpcServer:
 
     def method(self, name: str):
         """装饰器：注册方法处理器"""
+
         def decorator(func: Callable) -> Callable:
             self.handlers[name] = func
             return func
+
         return decorator
 
     def register(self, name: str, handler: Callable):
@@ -71,7 +75,7 @@ class JsonRpcServer:
     def _handle_request(self, request: JsonRpcRequest) -> JsonRpcResponse:
         """处理请求"""
         handler = self.handlers.get(request.method)
-        
+
         if handler is None:
             return JsonRpcResponse(
                 id=request.id,

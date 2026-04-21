@@ -6,15 +6,15 @@ Usage:
 This starts the JSON-RPC server that communicates via stdio.
 """
 
-from jojo_code.server.jsonrpc import get_server
 from jojo_code.server.handlers import register_handlers
+from jojo_code.server.jsonrpc import get_server
 
 
 def main():
     """运行 JSON-RPC 服务器"""
     # 注册处理器
     register_handlers()
-    
+
     # 获取服务器并运行
     server = get_server()
     server.run()
