@@ -13,7 +13,6 @@ keywords = [
     "langgraph",
     "langchain",
     "coding-assistant",
-    "cli",
     "llm",
 ]
 classifiers = [
@@ -34,8 +33,6 @@ dependencies = [
     "langchain>=0.3",
     "langchain-openai>=0.2",
     "langchain-anthropic>=0.2",
-    "rich>=13",
-    "prompt-toolkit>=3",
     "pydantic>=2",
     "pydantic-settings>=2",
     "tiktoken>=0.5",
@@ -58,9 +55,6 @@ Homepage = "https://github.com/afine907/jojo-code"
 Documentation = "https://github.com/afine907/jojo-code#readme"
 Repository = "https://github.com/afine907/jojo-code"
 Issues = "https://github.com/afine907/jojo-code/issues"
-
-[project.scripts]
-jojo-code = "jojo_code.cli.main:main"
 
 [build-system]
 requires = ["uv_build>=0.9.2,<0.10.0"]
