@@ -1,0 +1,35 @@
+{
+  "name": "@jojo-code/cli",
+  "version": "0.1.0",
+  "description": "jojo-code CLI - TypeScript terminal UI with ink",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "jojo-code": "./dist/index.js"
+  },
+  "scripts": {
+    "dev": "tsx watch src/index.tsx",
+    "build": "tsc",
+    "test": "vitest",
+    "lint": "eslint src --ext .ts,.tsx",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "ink": "^4.4.1",
+    "react": "^18.2.0",
+    "react-markdown": "^9.0.1",
+    "chalk": "^5.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/react": "^18.2.0",
+    "ink-testing-library": "^3.0.0",
+    "typescript": "^5.3.0",
+    "tsx": "^4.7.0",
+    "vitest": "^1.2.0",
+    "@testing-library/react": "^14.1.2"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
