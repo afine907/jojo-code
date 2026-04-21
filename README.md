@@ -22,7 +22,7 @@
 - 🔧 **工具系统** - 文件读写、代码搜索、Shell 执行，安全的工具抽象
 - 🧠 **Agent 循环** - Thinking → Tool Call → Execute → Observe 完整闭环
 - 💾 **智能记忆** - 自动 Token 计数与上下文压缩
-- 🖥️ **交互终端** - Rich 高亮输出，代码语法着色
+- 🖥️ **现代 CLI** - TypeScript ink 终端界面，React 风格组件
 - 🧪 **TDD 驱动** - 完整测试覆盖，测试即文档
 
 ---
@@ -56,31 +56,19 @@
 
 ### 安装
 
-#### 方式一：从 PyPI 安装（推荐）
-
-```bash
-# 使用 pip
-pip install jojo-code
-
-# 或使用 uv tool（推荐）
-uv tool install jojo-code
-
-# 运行
-jojo-code
-```
-
-#### 方式二：从源码安装（开发）
-
 ```bash
 # 克隆项目
 git clone https://github.com/afine907/jojo-code.git
 cd jojo-code
 
-# 安装依赖 (推荐使用 uv)
+# 安装 Python 依赖
 uv sync
 
-# 运行
-uv run jojo-code
+# 安装 Node.js 依赖
+pnpm install
+
+# 运行 CLI
+cd packages/cli && pnpm dev
 ```
 
 ### 配置
