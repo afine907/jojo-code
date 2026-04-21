@@ -1,8 +1,8 @@
 <div align="center">
 
-# 🤖 Nano-Code
+# 🤖 jojo-Code
 
-**A mini coding agent to understand AI Agent architecture from the inside out.**
+**A coding agent powered by jojo AI - TypeScript CLI + Python LangGraph Core**
 
 [![Python](https://img.shields.io/badge/Python-3.11%2B-blue?logo=python&logoColor=white)](https://python.org)
 [![LangGraph](https://img.shields.io/badge/LangGraph-0.3%2B-green?logo=langchain&logoColor=white)](https://github.com/langchain-ai/langgraph)
@@ -31,7 +31,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  🤖 Nano-Code                                               │
+│  🤖 jojo-Code                                               │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
 │  👤 读取 README.md 并总结项目                                │
@@ -44,7 +44,7 @@
 │                                                             │
 │  🤖 调用 grep_search("TODO")                                │
 │  ────────────────────────────────────────────               │
-│  📁 src/nano_code/tools/file_tools.py:42                    │
+│  📁 src/jojo_code/tools/file_tools.py:42                    │
 │     # TODO: add encoding detection                          │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
@@ -60,27 +60,27 @@
 
 ```bash
 # 使用 pip
-pip install nano-code
+pip install jojo-code
 
 # 或使用 uv tool（推荐）
-uv tool install nano-code
+uv tool install jojo-code
 
 # 运行
-nano-code
+jojo-code
 ```
 
 #### 方式二：从源码安装（开发）
 
 ```bash
 # 克隆项目
-git clone https://github.com/afine907/nano-code.git
-cd nano-code
+git clone https://github.com/afine907/jojo-code.git
+cd jojo-code
 
 # 安装依赖 (推荐使用 uv)
 uv sync
 
 # 运行
-uv run nano-code
+uv run jojo-code
 ```
 
 ### 配置
@@ -101,13 +101,13 @@ MODEL=LongCat-Flash-Chat
 # 方式 3: OpenAI 默认
 # OPENAI_API_KEY=your-openai-api-key
 # OPENAI_BASE_URL=
-# NANO_CODE_MODEL=gpt-4o-mini
+# JOJO_CODE_MODEL=gpt-4o-mini
 ```
 
 ### 运行
 
 ```bash
-uv run nano-code
+uv run jojo-code
 ```
 
 ---
@@ -147,7 +147,7 @@ uv run nano-code
 ### 目录结构
 
 ```text
-src/nano_code/
+src/jojo_code/
 ├── agent/          # Agent 核心
 │   ├── graph.py    # LangGraph 状态图定义
 │   ├── state.py    # AgentState 状态结构
@@ -177,10 +177,10 @@ src/nano_code/
 
 | 主题 | 内容 | 文件 |
 |------|------|------|
-| **Agent 循环** | 思考-行动-观察模式 | [agent/nodes.py](src/nano_code/agent/nodes.py) |
-| **状态机设计** | LangGraph 图构建 | [agent/graph.py](src/nano_code/agent/graph.py) |
-| **工具抽象** | 安全的工具定义与执行 | [tools/](src/nano_code/tools/) |
-| **记忆管理** | Token 计数与压缩策略 | [memory/conversation.py](src/nano_code/memory/conversation.py) |
+| **Agent 循环** | 思考-行动-观察模式 | [agent/nodes.py](src/jojo_code/agent/nodes.py) |
+| **状态机设计** | LangGraph 图构建 | [agent/graph.py](src/jojo_code/agent/graph.py) |
+| **工具抽象** | 安全的工具定义与执行 | [tools/](src/jojo_code/tools/) |
+| **记忆管理** | Token 计数与压缩策略 | [memory/conversation.py](src/jojo_code/memory/conversation.py) |
 | **TDD 实践** | 测试驱动的开发流程 | [tests/](tests/) |
 
 ---
@@ -194,7 +194,7 @@ src/nano_code/
 uv run pytest tests/ -v
 
 # 带覆盖率报告
-uv run pytest tests/ -v --cov=src/nano_code --cov-report=html
+uv run pytest tests/ -v --cov=src/jojo_code --cov-report=html
 ```
 
 ### TDD 工作流

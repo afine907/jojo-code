@@ -1,6 +1,6 @@
 """搜索工具测试"""
 
-from nano_code.tools.search_tools import glob_search, grep_search
+from jojo_code.tools.search_tools import glob_search, grep_search
 
 
 class TestGrepSearch:

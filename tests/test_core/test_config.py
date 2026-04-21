@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from nano_code.core.config import Settings, get_settings
+from jojo_code.core.config import Settings, get_settings
 
 
 class TestSettings:
@@ -27,9 +27,9 @@ class TestSettings:
 
     def test_storage_path_default(self):
         """存储路径应该默认为用户目录"""
-        settings = Settings(storage_path=Path.home() / ".nano-code")
+        settings = Settings(storage_path=Path.home() / ".jojo-code")
 
-        assert settings.storage_path == Path.home() / ".nano-code"
+        assert settings.storage_path == Path.home() / ".jojo-code"
 
     def test_custom_values(self):
         """应该接受自定义值"""
@@ -45,8 +45,8 @@ class TestSettings:
 
     def test_env_prefix(self, monkeypatch):
         """应该从环境变量读取配置"""
-        monkeypatch.setenv("NANO_CODE_MODEL", "gpt-4")
-        monkeypatch.setenv("NANO_CODE_MAX_ITERATIONS", "20")
+        monkeypatch.setenv("JOJO_CODE_MODEL", "gpt-4")
+        monkeypatch.setenv("JOJO_CODE_MAX_ITERATIONS", "20")
 
         # 由于 .env 已加载，这里验证 Settings 可以被实例化
         settings = Settings()
@@ -57,7 +57,7 @@ class TestSettings:
 
     def test_api_key_from_env(self, monkeypatch):
         """应该从环境变量读取 API Key"""
-        monkeypatch.setenv("NANO_CODE_OPENAI_API_KEY", "sk-test-key")
+        monkeypatch.setenv("JOJO_CODE_OPENAI_API_KEY", "sk-test-key")
 
         # 由于 .env 已加载，这里验证 Settings 可以被实例化
         settings = Settings()
@@ -67,11 +67,11 @@ class TestSettings:
 
     def test_storage_path_from_env(self, monkeypatch):
         """应该从环境变量读取存储路径"""
-        monkeypatch.setenv("NANO_CODE_STORAGE_PATH", "/custom/path")
+        monkeypatch.setenv("JOJO_CODE_STORAGE_PATH", "/custom/path")
 
-        settings = Settings(storage_path=Path.home() / ".nano-code")
+        settings = Settings(storage_path=Path.home() / ".jojo-code")
 
-        assert settings.storage_path == Path.home() / ".nano-code"
+        assert settings.storage_path == Path.home() / ".jojo-code"
 
 
 class TestGetSettings:
@@ -80,7 +80,7 @@ class TestGetSettings:
     def test_returns_settings_instance(self):
         """应该返回 Settings 实例"""
         # 重置单例
-        import nano_code.core.config as config_module
+        import jojo_code.core.config as config_module
 
         config_module._settings = None
 
@@ -91,7 +91,7 @@ class TestGetSettings:
     def test_returns_singleton(self):
         """应该返回单例"""
         # 重置单例
-        import nano_code.core.config as config_module
+        import jojo_code.core.config as config_module
 
         config_module._settings = None
 
@@ -102,7 +102,7 @@ class TestGetSettings:
 
     def test_singleton_is_reset_after_none(self):
         """重置后应该创建新实例"""
-        import nano_code.core.config as config_module
+        import jojo_code.core.config as config_module
 
         config_module._settings = None
         settings1 = get_settings()

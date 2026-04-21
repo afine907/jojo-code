@@ -1,5 +1,5 @@
 """
-Nano Code - Tools 模块单元测试
+jojo Code - Tools 模块单元测试
 """
 
 import os
@@ -7,10 +7,10 @@ import tempfile
 
 import pytest
 
-from nano_code.tools.file_tools import list_directory, read_file, write_file
-from nano_code.tools.registry import Tool, ToolRegistry
-from nano_code.tools.search_tools import glob_search, grep_search
-from nano_code.tools.shell_tools import run_command
+from jojo_code.tools.file_tools import list_directory, read_file, write_file
+from jojo_code.tools.registry import Tool, ToolRegistry
+from jojo_code.tools.search_tools import glob_search, grep_search
+from jojo_code.tools.shell_tools import run_command
 
 
 class TestToolRegistry:

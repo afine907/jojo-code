@@ -1,4 +1,4 @@
-# Nano-Code 增强功能提交指南
+# jojo-Code 增强功能提交指南
 
 ## 📋 提交前的准备
 
@@ -45,10 +45,10 @@ git diff --cached
 ### 2. 提交代码
 ```bash
 # 提交工具代码
-git add src/nano_code/tools/code_analysis_tools.py
-git add src/nano_code/tools/git_tools.py  
-git add src/nano_code/tools/performance_tools.py
-git add src/nano_code/tools/registry.py
+git add src/jojo_code/tools/code_analysis_tools.py
+git add src/jojo_code/tools/git_tools.py  
+git add src/jojo_code/tools/performance_tools.py
+git add src/jojo_code/tools/registry.py
 
 git commit -m "feat(tools): 添加代码分析、Git集成和性能分析工具集"
 
@@ -76,7 +76,7 @@ git push origin feature/enhanced-tools
 
 ### PR 标题
 ```
-🚀 为 Nano-Code 添加增强工具集
+🚀 为 jojo-Code 添加增强工具集
 ```
 
 ### PR 描述
@@ -138,4 +138,4 @@ git push origin feature/enhanced-tools
 
 ---
 
-**祝提交顺利！新功能将为 Nano-Code 项目带来显著的增强！** 🚀
+**祝提交顺利！新功能将为 jojo-Code 项目带来显著的增强！** 🚀

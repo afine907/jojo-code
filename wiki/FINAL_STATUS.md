@@ -1,4 +1,4 @@
-# 🎯 Nano-Code 增强功能 - 最终状态报告
+# 🎯 jojo-Code 增强功能 - 最终状态报告
 
 ## ✅ 完成状态: **100% 完成**
 
@@ -51,10 +51,10 @@
 ### 📁 文件清单
 
 #### 源代码文件
-- ✅ `src/nano_code/tools/code_analysis_tools.py` (9.2KB)
-- ✅ `src/nano_code/tools/git_tools.py` (10.7KB)
-- ✅ `src/nano_code/tools/performance_tools.py` (10.2KB)
-- ✅ `src/nano_code/tools/registry.py` (已更新)
+- ✅ `src/jojo_code/tools/code_analysis_tools.py` (9.2KB)
+- ✅ `src/jojo_code/tools/git_tools.py` (10.7KB)
+- ✅ `src/jojo_code/tools/performance_tools.py` (10.2KB)
+- ✅ `src/jojo_code/tools/registry.py` (已更新)
 
 #### 测试文件  
 - ✅ `tests/test_tools/test_code_analysis_tools.py` (5.7KB)
@@ -134,7 +134,7 @@ uv run python examples/new_tools_demo.py
 
 ### 🎊 总结
 
-**Nano-Code 项目已成功增强了 13 个强大的新工具！**
+**jojo-Code 项目已成功增强了 13 个强大的新工具！**
 
 这次增强显著扩展了项目的功能范围：
 - **从** 基础文件操作工具
@@ -149,4 +149,4 @@ uv run python examples/new_tools_demo.py
 **测试覆盖**: 💯 100%  
 **文档完整**: ✅ 充分  
 
-🎉 **Nano-Code 现在拥有了企业级编码助手的能力！**
+🎉 **jojo-Code 现在拥有了企业级编码助手的能力！**

@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from nano_code.cli.theme import (
+from jojo_code.cli.theme import (
     PREDEFINED_THEMES,
     Theme,
     ThemeColors,

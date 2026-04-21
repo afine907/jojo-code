@@ -2,7 +2,7 @@
 
 import pytest
 
-from nano_code.cli.diff_preview import (
+from jojo_code.cli.diff_preview import (
     DiffFile,
     DiffLine,
     DiffPreview,

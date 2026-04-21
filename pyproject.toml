@@ -1,7 +1,7 @@
 [project]
-name = "nano-code"
+name = "jojo-code"
 version = "0.1.0"
-description = "A mini coding agent built with LangGraph - Learn Agent architecture through practice"
+description = "A coding agent powered by jojo AI - TypeScript CLI + Python LangGraph Core"
 readme = "README.md"
 license = "MIT"
 authors = [
@@ -54,13 +54,13 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/afine907/nano-code"
-Documentation = "https://github.com/afine907/nano-code#readme"
-Repository = "https://github.com/afine907/nano-code"
-Issues = "https://github.com/afine907/nano-code/issues"
+Homepage = "https://github.com/afine907/jojo-code"
+Documentation = "https://github.com/afine907/jojo-code#readme"
+Repository = "https://github.com/afine907/jojo-code"
+Issues = "https://github.com/afine907/jojo-code/issues"
 
 [project.scripts]
-nano-code = "nano_code.cli.main:main"
+jojo-code = "jojo_code.cli.main:main"
 
 [build-system]
 requires = ["uv_build>=0.9.2,<0.10.0"]

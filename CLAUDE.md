@@ -4,13 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Nano-Code is a mini coding agent built with LangGraph, designed for learning AI Agent architecture. It implements the classic "Thinking → Tool Call → Execute → Observe" agent loop pattern.
+jojo-Code is a mini coding agent built with LangGraph, designed for learning AI Agent architecture. It implements the classic "Thinking → Tool Call → Execute → Observe" agent loop pattern.
 
 ## Commands
 
 ```bash
 # Run the CLI
-uv run nano-code
+uv run jojo-code
 
 # Run all tests
 uv run pytest tests/ -v
@@ -19,7 +19,7 @@ uv run pytest tests/ -v
 uv run pytest tests/test_agent.py -v
 
 # Run with coverage
-uv run pytest tests/ -v --cov=src/nano_code --cov-report=html
+uv run pytest tests/ -v --cov=src/jojo_code --cov-report=html
 
 # Linting
 uv run ruff check src/ tests/
@@ -46,11 +46,11 @@ CLI Layer (cli/) → Agent Loop (agent/) → Tool Layer (tools/)
 - Maximum 50 iterations per session
 
 **Key Files:**
-- [agent/graph.py](src/nano_code/agent/graph.py) - LangGraph state machine definition
-- [agent/nodes.py](src/nano_code/agent/nodes.py) - thinking/execute node implementations
-- [agent/state.py](src/nano_code/agent/state.py) - AgentState TypedDict
-- [tools/registry.py](src/nano_code/tools/registry.py) - Tool registration and execution
-- [core/llm.py](src/nano_code/core/llm.py) - LLM client (OpenAI/Anthropic/compatible APIs)
+- [agent/graph.py](src/jojo_code/agent/graph.py) - LangGraph state machine definition
+- [agent/nodes.py](src/jojo_code/agent/nodes.py) - thinking/execute node implementations
+- [agent/state.py](src/jojo_code/agent/state.py) - AgentState TypedDict
+- [tools/registry.py](src/jojo_code/tools/registry.py) - Tool registration and execution
+- [core/llm.py](src/jojo_code/core/llm.py) - LLM client (OpenAI/Anthropic/compatible APIs)
 
 **Tool System:**
 Tools are LangChain `BaseTool` instances. Register new tools in `ToolRegistry._register_default_tools()`.

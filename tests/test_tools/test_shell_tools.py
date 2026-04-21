@@ -2,7 +2,7 @@
 
 import pytest
 
-from nano_code.tools.shell_tools import run_command
+from jojo_code.tools.shell_tools import run_command
 
 
 class TestRunCommand:

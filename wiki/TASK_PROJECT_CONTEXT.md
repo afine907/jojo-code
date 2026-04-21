@@ -25,9 +25,9 @@
 - 向上遍历目录树
 
 ### 4. 实现位置
-- `src/nano_code/context/project.py` - 项目检测和 AGENTS.md 解析
-- `src/nano_code/context/init.py` - `/init` 命令实现
-- `src/nano_code/cli/main.py` - 集成项目上下文
+- `src/jojo_code/context/project.py` - 项目检测和 AGENTS.md 解析
+- `src/jojo_code/context/init.py` - `/init` 命令实现
+- `src/jojo_code/cli/main.py` - 集成项目上下文
 
 ### 5. AGENTS.md 模板
 ```markdown
@@ -42,7 +42,7 @@
 - LangChain
 
 ## 目录结构
-src/nano_code/
+src/jojo_code/
 ├── agent/     # Agent 核心
 ├── tools/     # 工具实现
 ├── memory/    # 记忆管理

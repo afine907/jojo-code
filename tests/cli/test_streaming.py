@@ -125,11 +125,11 @@ class AIMessageChunk:
 class TestStreamingIntegration:
     """测试流式输出集成"""
 
-    @patch("nano_code.agent.graph.get_agent_graph")
-    @patch("nano_code.core.llm.get_llm")
+    @patch("jojo_code.agent.graph.get_agent_graph")
+    @patch("jojo_code.core.llm.get_llm")
     def test_streaming_with_mocked_graph(self, mock_get_llm, mock_get_graph):
         """测试使用 mock 的 graph 进行流式输出"""
-        from nano_code.agent.state import create_initial_state
+        from jojo_code.agent.state import create_initial_state
 
         mock_graph = MagicMock()
         mock_get_graph.return_value = mock_graph

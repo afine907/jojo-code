@@ -1,4 +1,4 @@
-from nano_code.session.models import Message, Session
+from jojo_code.session.models import Message, Session
 
 
 def test_message_roundtrip():

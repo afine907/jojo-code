@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from nano_code.cli.session_manager import Session, SessionManager
+from jojo_code.cli.session_manager import Session, SessionManager
 
 
 class TestSession:

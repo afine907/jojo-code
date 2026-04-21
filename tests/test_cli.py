@@ -1,5 +1,5 @@
 """
-Nano Code - CLI 模块单元测试
+jojo Code - CLI 模块单元测试
 """
 
 
@@ -8,7 +8,7 @@ class TestCLI:
 
     def test_cli_init(self):
         """测试 CLI 初始化"""
-        from nano_code.cli.main import CLI
+        from jojo_code.cli.main import CLI
 
         cli = CLI()
         assert cli is not None
@@ -16,7 +16,7 @@ class TestCLI:
 
     def test_cli_help(self):
         """测试帮助信息"""
-        from nano_code.cli.main import CLI
+        from jojo_code.cli.main import CLI
 
         cli = CLI()
         help_text = cli.get_help()
@@ -28,7 +28,7 @@ class TestSessionStats:
 
     def test_default_values(self):
         """测试默认值"""
-        from nano_code.cli.console import SessionStats
+        from jojo_code.cli.console import SessionStats
 
         stats = SessionStats()
         assert stats is not None
@@ -40,7 +40,7 @@ class TestConsoleOutput:
     def test_print_user(self):
         """测试打印用户消息"""
         # 不抛出异常即可
-        from nano_code.cli.console import print_user
+        from jojo_code.cli.console import print_user
 
         print_user("test")
 
@@ -51,7 +51,7 @@ class TestHandleCommand:
     def test_exit_command(self):
         """测试退出命令"""
         # 测试处理函数存在
-        from nano_code.cli.main import main
+        from jojo_code.cli.main import main
 
         assert main is not None
 
@@ -62,7 +62,7 @@ class TestCompatibility:
 
     def test_cli_imports(self):
         """测试 CLI 导入"""
-        from nano_code.cli.main import CLI, main
+        from jojo_code.cli.main import CLI, main
 
         assert CLI is not None
         assert main is not None

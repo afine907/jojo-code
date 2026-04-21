@@ -2,7 +2,7 @@
 
 import pytest
 
-from nano_code.cli.modes import AgentMode, ModeManager, get_mode_manager
+from jojo_code.cli.modes import AgentMode, ModeManager, get_mode_manager
 
 
 class TestAgentMode:

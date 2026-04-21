@@ -2,7 +2,7 @@
 
 ## 支持的 API
 
-Nano-Code 支持三种 LLM 后端：
+jojo-Code 支持三种 LLM 后端：
 
 ### 1. OpenAI 兼容 API（推荐）
 
@@ -11,21 +11,21 @@ Nano-Code 支持三种 LLM 后端：
 ```env
 OPENAI_API_KEY=your-api-key
 OPENAI_BASE_URL=https://api.longcat.chat/openai/v1
-NANO_CODE_MODEL=gpt-4o-mini
+JOJO_CODE_MODEL=gpt-4o-mini
 ```
 
 ### 2. Anthropic Claude
 
 ```env
 ANTHROPIC_API_KEY=your-anthropic-key
-NANO_CODE_MODEL=claude-sonnet-4-20250514
+JOJO_CODE_MODEL=claude-sonnet-4-20250514
 ```
 
 ### 3. OpenAI 默认
 
 ```env
 OPENAI_API_KEY=your-openai-key
-NANO_CODE_MODEL=gpt-4o-mini
+JOJO_CODE_MODEL=gpt-4o-mini
 ```
 
 ## 配置优先级
@@ -53,7 +53,7 @@ OPENAI_BASE_URL=https://api.longcat.chat/openai/v1
 ANTHROPIC_API_KEY=sk-ant-xxx
 
 # 模型选择
-NANO_CODE_MODEL=gpt-4o-mini
+JOJO_CODE_MODEL=gpt-4o-mini
 ```
 
 ### config.py 配置
@@ -66,7 +66,7 @@ class Settings(BaseSettings):
     openai_api_key: str | None = None
     openai_base_url: str | None = None
     anthropic_api_key: str | None = None
-    storage_path: Path = Path.home() / ".nano-code"
+    storage_path: Path = Path.home() / ".jojo-code"
 ```
 
 ## LLM 客户端实现

@@ -5,12 +5,12 @@ from pathlib import Path
 
 import pytest
 
-from nano_code.cli.completer import (
+from jojo_code.cli.completer import (
     CLI_COMMANDS,
     CommandCompleter,
     FilePathCompleter,
     HistoryCompleter,
-    NanoCompleter,
+    JojoCompleter,
     PathCompleter,
     create_completer,
 )
@@ -167,39 +167,39 @@ class TestHistoryCompleter:
         assert len(results) == 0
 
 
-class TestNanoCompleter:
-    """测试 NanoCompleter"""
+class TestJojoCompleter:
+    """测试 JojoCompleter"""
 
     def test_initialization(self):
         """测试初始化"""
-        completer = NanoCompleter()
+        completer = JojoCompleter()
         assert completer.command_completer is not None
         assert completer.path_completer is not None
 
     def test_command_prefix(self):
         """测试命令前缀"""
-        completer = NanoCompleter()
+        completer = JojoCompleter()
         document = MockDocument("/h")
         results = list(completer.get_completions(document, MockCompleteEvent()))
         assert any(r.text == "/help" for r in results)
 
     def test_at_prefix(self):
         """测试 @ 前缀"""
-        completer = NanoCompleter()
+        completer = JojoCompleter()
         document = MockDocument("@")
         results = list(completer.get_completions(document, MockCompleteEvent()))
         assert isinstance(results, list)
 
     def test_dot_prefix(self):
         """测试 ./ 前缀"""
-        completer = NanoCompleter()
+        completer = JojoCompleter()
         document = MockDocument("./")
         results = list(completer.get_completions(document, MockCompleteEvent()))
         assert isinstance(results, list)
 
     def test_no_prefix_returns_commands(self):
         """测试无前缀时返回命令"""
-        completer = NanoCompleter()
+        completer = JojoCompleter()
         document = MockDocument("")
         results = list(completer.get_completions(document, MockCompleteEvent()))
         assert len(results) > 0
@@ -210,7 +210,7 @@ class TestNanoCompleter:
         def callback():
             return ["/help", "/stats"]
 
-        completer = NanoCompleter(get_history_callback=callback)
+        completer = JojoCompleter(get_history_callback=callback)
         document = MockDocument("/s")
         results = list(completer.get_completions(document, MockCompleteEvent()))
         cmd_results = [r for r in results if r.text.startswith("/")]
@@ -228,7 +228,7 @@ class TestCreateCompleter:
 
     def test_with_session_manager(self):
         """测试带会话管理器"""
-        from nano_code.cli.session_manager import SessionManager
+        from jojo_code.cli.session_manager import SessionManager
 
         with tempfile.TemporaryDirectory() as tmpdir:
             session_manager = SessionManager(sessions_dir=Path(tmpdir))

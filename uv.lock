@@ -852,7 +852,7 @@ wheels = [
 ]
 
 [[package]]
-name = "nano-code"
+name = "jojo-code"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

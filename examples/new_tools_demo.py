@@ -6,9 +6,9 @@ from pathlib import Path
 # 添加项目路径
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
-from nano_code.tools.code_analysis_tools import analyze_python_file, find_python_dependencies
-from nano_code.tools.git_tools import git_status, git_info
-from nano_code.tools.performance_tools import analyze_function_complexity
+from jojo_code.tools.code_analysis_tools import analyze_python_file, find_python_dependencies
+from jojo_code.tools.git_tools import git_status, git_info
+from jojo_code.tools.performance_tools import analyze_function_complexity
 
 
 def demo_code_analysis():
@@ -101,7 +101,7 @@ def demo_git_tools():
 
 def main():
     """主演示函数"""
-    print("🚀 Nano-Code 新工具功能演示")
+    print("🚀 jojo-Code 新工具功能演示")
     print("=" * 60)
     
     try:
@@ -116,7 +116,7 @@ def main():
         
     except Exception as e:
         print(f"演示过程中出现错误: {e}")
-        print("请确保在 nano-code 项目根目录运行此脚本")
+        print("请确保在 jojo-code 项目根目录运行此脚本")
 
 
 if __name__ == "__main__":

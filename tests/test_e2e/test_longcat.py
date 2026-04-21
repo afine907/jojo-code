@@ -30,7 +30,7 @@ class TestLongCatBasicChat:
 
     @pytest.fixture(autouse=True)
     def setup(self, longcat_configured):
-        from nano_code.core.llm import get_llm
+        from jojo_code.core.llm import get_llm
 
         self.llm = get_llm()
 
@@ -60,13 +60,13 @@ class TestLongCatToolCalling:
 
     @pytest.fixture(autouse=True)
     def setup(self, longcat_configured):
-        from nano_code.core.llm import get_llm
+        from jojo_code.core.llm import get_llm
 
         self.llm = get_llm()
 
     def test_tool_binding(self):
         """测试工具绑定"""
-        from nano_code.tools.registry import get_tool_registry
+        from jojo_code.tools.registry import get_tool_registry
 
         registry = get_tool_registry()
         tools = registry.get_langchain_tools()
@@ -99,8 +99,8 @@ class TestLongCatAgentIntegration:
     @pytest.mark.slow
     def test_agent_with_longcat(self, longcat_configured, monkeypatch):
         """测试 Agent 使用 LongCat"""
-        from nano_code.agent.graph import build_agent_graph
-        from nano_code.agent.state import create_initial_state
+        from jojo_code.agent.graph import build_agent_graph
+        from jojo_code.agent.state import create_initial_state
 
         graph = build_agent_graph()
         state = create_initial_state("你好，请自我介绍")
@@ -112,8 +112,8 @@ class TestLongCatAgentIntegration:
     @pytest.mark.slow
     def test_agent_with_file_tool(self, longcat_configured, tmp_path):
         """测试 Agent 使用文件工具"""
-        from nano_code.agent.graph import build_agent_graph
-        from nano_code.agent.state import create_initial_state
+        from jojo_code.agent.graph import build_agent_graph
+        from jojo_code.agent.state import create_initial_state
 
         test_file = tmp_path / "test.txt"
         test_file.write_text("这是一个测试文件的内容。\n第二行内容。")
@@ -128,8 +128,8 @@ class TestLongCatAgentIntegration:
     @pytest.mark.slow
     def test_agent_with_shell_tool(self, longcat_configured, tmp_path):
         """测试 Agent 调用 shell 工具"""
-        from nano_code.agent.graph import build_agent_graph
-        from nano_code.agent.state import create_initial_state
+        from jojo_code.agent.graph import build_agent_graph
+        from jojo_code.agent.state import create_initial_state
 
         graph = build_agent_graph()
         state = create_initial_state("列出当前目录的文件")
@@ -143,8 +143,8 @@ class TestLongCatAgentIntegration:
     @pytest.mark.slow
     def test_agent_combined_flow(self, longcat_configured, tmp_path):
         """测试 Agent 组合流程：创建文件 → 读取 → 执行"""
-        from nano_code.agent.graph import build_agent_graph
-        from nano_code.agent.state import create_initial_state
+        from jojo_code.agent.graph import build_agent_graph
+        from jojo_code.agent.state import create_initial_state
 
         test_file = tmp_path / "hello.py"
         test_file.write_text("print('Hello World')")
@@ -161,8 +161,8 @@ class TestLongCatAgentIntegration:
     @pytest.mark.slow
     def test_agent_error_handling(self, longcat_configured):
         """测试 Agent 异常处理"""
-        from nano_code.agent.graph import build_agent_graph
-        from nano_code.agent.state import create_initial_state
+        from jojo_code.agent.graph import build_agent_graph
+        from jojo_code.agent.state import create_initial_state
 
         graph = build_agent_graph()
 

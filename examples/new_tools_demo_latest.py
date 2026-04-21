@@ -6,9 +6,9 @@ from pathlib import Path
 # 添加项目路径
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
-from nano_code.tools.code_analysis_tools import analyze_python_file, find_python_dependencies
-from nano_code.tools.git_tools import git_status, git_info
-from nano_code.tools.performance_tools import analyze_function_complexity
+from jojo_code.tools.code_analysis_tools import analyze_python_file, find_python_dependencies
+from jojo_code.tools.git_tools import git_status, git_info
+from jojo_code.tools.performance_tools import analyze_function_complexity
 
 
 def demo_code_analysis():

@@ -1,6 +1,6 @@
 """CLI 控制台输出测试"""
 
-from nano_code.cli.console import (
+from jojo_code.cli.console import (
     SessionStats,
     print_error,
     print_help,

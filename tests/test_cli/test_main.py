@@ -5,8 +5,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 from langchain_core.messages import HumanMessage
 
-from nano_code.cli.console import session_stats
-from nano_code.cli.main import handle_command, main
+from jojo_code.cli.console import session_stats
+from jojo_code.cli.main import handle_command, main
 
 
 class TestHandleCommand:
@@ -150,7 +150,7 @@ class TestHandleCommand:
 class TestMain:
     """主函数测试"""
 
-    @patch("nano_code.cli.main.run_interactive")
+    @patch("jojo_code.cli.main.run_interactive")
     def test_main_calls_run_interactive(self, mock_run):
         """main 应该调用 run_interactive"""
         mock_run.side_effect = SystemExit(0)
@@ -160,7 +160,7 @@ class TestMain:
 
         mock_run.assert_called_once()
 
-    @patch("nano_code.cli.main.run_interactive")
+    @patch("jojo_code.cli.main.run_interactive")
     def test_main_handles_exception(self, mock_run, capsys):
         """main 应该处理异常"""
         mock_run.side_effect = Exception("Test error")
@@ -174,14 +174,14 @@ class TestMain:
 class TestGetCurrentModel:
     """获取当前模型测试"""
 
-    @patch("nano_code.cli.main.get_settings")
+    @patch("jojo_code.cli.main.get_settings")
     def test_get_current_model(self, mock_settings):
         """应该返回配置的模型"""
         mock_config = MagicMock()
         mock_config.model = "test-model"
         mock_settings.return_value = mock_config
 
-        from nano_code.cli.main import get_current_model
+        from jojo_code.cli.main import get_current_model
 
         result = get_current_model()
         assert result == "test-model"

@@ -2,7 +2,7 @@
 
 import pytest
 
-from nano_code.cli.keybindings import (
+from jojo_code.cli.keybindings import (
     KeyBinding,
     KeyBindingGroup,
     KeyBindingManager,

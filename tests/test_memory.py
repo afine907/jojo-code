@@ -1,11 +1,11 @@
 """
-Nano Code - Memory 模块单元测试
+jojo Code - Memory 模块单元测试
 """
 
 import os
 import tempfile
 
-from nano_code.memory.conversation import (
+from jojo_code.memory.conversation import (
     Conversation,
     ConversationManager,
     ConversationMemory,
@@ -172,7 +172,7 @@ class TestCompatibility:
 
     def test_imports(self):
         """测试导入"""
-        from nano_code.memory.conversation import Conversation, MemoryStore, Message
+        from jojo_code.memory.conversation import Conversation, MemoryStore, Message
 
         assert Message is not None
         assert Conversation is not None

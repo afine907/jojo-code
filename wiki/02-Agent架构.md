@@ -2,7 +2,7 @@
 
 ## 设计理念
 
-Nano-Code 采用经典的 **ReAct (Reasoning + Acting)** 模式，通过 LangGraph 实现状态机驱动的 Agent 循环。
+jojo-Code 采用经典的 **ReAct (Reasoning + Acting)** 模式，通过 LangGraph 实现状态机驱动的 Agent 循环。
 
 核心循环：
 ```
@@ -108,7 +108,7 @@ def should_continue(state: AgentState) -> Literal["continue", "end"]:
 
 3. execute_node
    - 执行 read_file
-   - tool_results = ["# Nano-Code\n...文件内容..."]
+   - tool_results = ["# jojo-Code\n...文件内容..."]
 
 4. thinking_node（第二次）
    - LLM 看到工具结果

@@ -52,8 +52,8 @@ def web_search(query: str, count: int = 5) -> str:
 - 返回 Markdown 格式
 
 ### 5. 实现位置
-- `src/nano_code/tools/web_tools.py` - Web 工具实现
-- `src/nano_code/tools/registry.py` - 注册新工具
+- `src/jojo_code/tools/web_tools.py` - Web 工具实现
+- `src/jojo_code/tools/registry.py` - 注册新工具
 - `tests/test_tools/test_web_tools.py` - 测试
 
 ### 6. 依赖

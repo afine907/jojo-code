@@ -2,8 +2,8 @@
 
 from unittest.mock import MagicMock, patch
 
-from nano_code.core.config import Settings
-from nano_code.core.llm import DEFAULT_MODEL, get_llm
+from jojo_code.core.config import Settings
+from jojo_code.core.llm import DEFAULT_MODEL, get_llm
 
 
 def create_mock_settings(**kwargs) -> Settings:
@@ -32,9 +32,9 @@ class TestGetLLM:
         mock_settings = create_mock_settings(openai_api_key="test-key")
 
         with (
-            patch("nano_code.core.llm.get_settings", return_value=mock_settings),
-            patch("nano_code.core.llm.os.getenv", return_value=None),
-            patch("nano_code.core.llm.ChatOpenAI") as mock_openai,
+            patch("jojo_code.core.llm.get_settings", return_value=mock_settings),
+            patch("jojo_code.core.llm.os.getenv", return_value=None),
+            patch("jojo_code.core.llm.ChatOpenAI") as mock_openai,
         ):
             mock_openai.return_value = MagicMock()
             get_llm()
@@ -47,9 +47,9 @@ class TestGetLLM:
         mock_settings = create_mock_settings(anthropic_api_key="sk-ant-test")
 
         with (
-            patch("nano_code.core.llm.get_settings", return_value=mock_settings),
-            patch("nano_code.core.llm.os.getenv", return_value=None),
-            patch("nano_code.core.llm.ChatAnthropic") as mock_anthropic,
+            patch("jojo_code.core.llm.get_settings", return_value=mock_settings),
+            patch("jojo_code.core.llm.os.getenv", return_value=None),
+            patch("jojo_code.core.llm.ChatAnthropic") as mock_anthropic,
         ):
             mock_anthropic.return_value = MagicMock()
             get_llm()
@@ -61,9 +61,9 @@ class TestGetLLM:
         mock_settings = create_mock_settings(anthropic_api_key="sk-ant-test")
 
         with (
-            patch("nano_code.core.llm.get_settings", return_value=mock_settings),
-            patch("nano_code.core.llm.os.getenv", return_value=None),
-            patch("nano_code.core.llm.ChatAnthropic") as mock_anthropic,
+            patch("jojo_code.core.llm.get_settings", return_value=mock_settings),
+            patch("jojo_code.core.llm.os.getenv", return_value=None),
+            patch("jojo_code.core.llm.ChatAnthropic") as mock_anthropic,
         ):
             mock_anthropic.return_value = MagicMock()
             get_llm(model="claude-sonnet-4-20250514")
@@ -75,9 +75,9 @@ class TestGetLLM:
         mock_settings = create_mock_settings(anthropic_api_key="sk-ant-test")
 
         with (
-            patch("nano_code.core.llm.get_settings", return_value=mock_settings),
-            patch("nano_code.core.llm.os.getenv", return_value=None),
-            patch("nano_code.core.llm.ChatAnthropic") as mock_anthropic,
+            patch("jojo_code.core.llm.get_settings", return_value=mock_settings),
+            patch("jojo_code.core.llm.os.getenv", return_value=None),
+            patch("jojo_code.core.llm.ChatAnthropic") as mock_anthropic,
         ):
             mock_anthropic.return_value = MagicMock()
             get_llm(model="gpt-4")  # 非 Claude 模型名
@@ -89,9 +89,9 @@ class TestGetLLM:
         mock_settings = create_mock_settings(openai_api_key="test-key")
 
         with (
-            patch("nano_code.core.llm.get_settings", return_value=mock_settings),
-            patch("nano_code.core.llm.os.getenv", return_value=None),
-            patch("nano_code.core.llm.ChatOpenAI") as mock_openai,
+            patch("jojo_code.core.llm.get_settings", return_value=mock_settings),
+            patch("jojo_code.core.llm.os.getenv", return_value=None),
+            patch("jojo_code.core.llm.ChatOpenAI") as mock_openai,
         ):
             mock_openai.return_value = MagicMock()
             get_llm(model="gpt-4")
@@ -103,9 +103,9 @@ class TestGetLLM:
         mock_settings = create_mock_settings(openai_api_key="test-key")
 
         with (
-            patch("nano_code.core.llm.get_settings", return_value=mock_settings),
-            patch("nano_code.core.llm.os.getenv", return_value=None),
-            patch("nano_code.core.llm.ChatOpenAI") as mock_openai,
+            patch("jojo_code.core.llm.get_settings", return_value=mock_settings),
+            patch("jojo_code.core.llm.os.getenv", return_value=None),
+            patch("jojo_code.core.llm.ChatOpenAI") as mock_openai,
         ):
             mock_openai.return_value = MagicMock()
             get_llm(temperature=0.5)
@@ -117,9 +117,9 @@ class TestGetLLM:
         mock_settings = create_mock_settings(model="gpt-4-turbo", openai_api_key="test-key")
 
         with (
-            patch("nano_code.core.llm.get_settings", return_value=mock_settings),
-            patch("nano_code.core.llm.os.getenv", return_value=None),
-            patch("nano_code.core.llm.ChatOpenAI") as mock_openai,
+            patch("jojo_code.core.llm.get_settings", return_value=mock_settings),
+            patch("jojo_code.core.llm.os.getenv", return_value=None),
+            patch("jojo_code.core.llm.ChatOpenAI") as mock_openai,
         ):
             mock_openai.return_value = MagicMock()
             get_llm()
@@ -131,9 +131,9 @@ class TestGetLLM:
         mock_settings = create_mock_settings(model="gpt-4-turbo", openai_api_key="test-key")
 
         with (
-            patch("nano_code.core.llm.get_settings", return_value=mock_settings),
-            patch("nano_code.core.llm.os.getenv", return_value=None),
-            patch("nano_code.core.llm.ChatOpenAI") as mock_openai,
+            patch("jojo_code.core.llm.get_settings", return_value=mock_settings),
+            patch("jojo_code.core.llm.os.getenv", return_value=None),
+            patch("jojo_code.core.llm.ChatOpenAI") as mock_openai,
         ):
             mock_openai.return_value = MagicMock()
             get_llm(model="gpt-4")

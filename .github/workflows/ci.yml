@@ -42,7 +42,7 @@ jobs:
         run: uv run mypy src/
 
       - name: 🧪 Run test suite with coverage
-        run: uv run pytest tests/ -v --cov=src/nano_code --cov-report=xml
+        run: uv run pytest tests/ -v --cov=src/jojo_code --cov-report=xml
 
       - name: 📊 Upload coverage report to Codecov
         uses: codecov/codecov-action@v4
@@ -82,7 +82,7 @@ jobs:
 
     environment:
       name: pypi
-      url: https://pypi.org/project/nano-code/
+      url: https://pypi.org/project/jojo-code/
 
     permissions:
       id-token: write

@@ -2,7 +2,7 @@
 
 import time
 
-from nano_code.cli.tool_display import (
+from jojo_code.cli.tool_display import (
     ToolCallDisplay,
     ToolCallPhase,
     display_tool_call,

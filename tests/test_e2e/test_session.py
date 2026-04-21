@@ -14,7 +14,7 @@ import os
 import pytest
 from langchain_core.messages import HumanMessage
 
-from nano_code.memory.conversation import ConversationMemory
+from jojo_code.memory.conversation import ConversationMemory
 
 pytestmark = pytest.mark.longcat
 
@@ -88,8 +88,8 @@ class TestSessionWithAgent:
     @pytest.mark.slow
     def test_full_conversation_with_agent(self, longcat_configured, tmp_path):
         """测试：完整对话链 + 持久化 + 恢复"""
-        from nano_code.agent.graph import build_agent_graph
-        from nano_code.agent.state import create_initial_state
+        from jojo_code.agent.graph import build_agent_graph
+        from jojo_code.agent.state import create_initial_state
 
         storage = tmp_path / "full.json"
         memory = ConversationMemory(storage_path=storage, auto_save=True)

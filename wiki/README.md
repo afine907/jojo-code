@@ -1,6 +1,6 @@
-# Nano-Code Wiki
+# jojo-Code Wiki
 
-Nano-Code 是一个基于 LangGraph 构建的迷你编程 Agent，用于学习 AI Agent 架构。
+jojo-Code 是一个基于 LangGraph 构建的迷你编程 Agent，用于学习 AI Agent 架构。
 
 ## 文档目录
 
@@ -36,7 +36,7 @@ uv sync
 cp .env.example .env
 
 # 运行 CLI
-uv run nano-code
+uv run jojo-code
 ```
 
 ## 核心概念

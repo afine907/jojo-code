@@ -2,7 +2,7 @@
 
 import pytest
 
-from nano_code.cli.layout import Layout, LayoutManager, LayoutMode, SplitPaneLayout
+from jojo_code.cli.layout import Layout, LayoutManager, LayoutMode, SplitPaneLayout
 
 
 class TestLayoutMode:

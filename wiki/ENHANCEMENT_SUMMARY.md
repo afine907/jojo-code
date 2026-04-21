@@ -1,8 +1,8 @@
-# Nano-Code 项目增强总结
+# jojo-Code 项目增强总结
 
 ## 🎯 项目目标
 
-为 nano-code 项目添加强大的工具能力，扩展其作为编码 Agent 的功能，使其能够：
+为 jojo-code 项目添加强大的工具能力，扩展其作为编码 Agent 的功能，使其能够：
 - 分析代码质量和复杂度
 - 与 Git 版本控制系统集成
 - 提供性能分析和优化建议
@@ -11,7 +11,7 @@
 
 ### 1. 代码分析工具集
 
-**文件**: `src/nano_code/tools/code_analysis_tools.py`
+**文件**: `src/jojo_code/tools/code_analysis_tools.py`
 
 **工具列表**:
 - `analyze_python_file(path)` - 分析 Python 文件的基本指标
@@ -28,7 +28,7 @@
 
 ### 2. Git 集成工具集
 
-**文件**: `src/nano_code/tools/git_tools.py`
+**文件**: `src/jojo_code/tools/git_tools.py`
 
 **工具列表**:
 - `git_status(path=".")` - 查看仓库状态
@@ -46,7 +46,7 @@
 
 ### 3. 性能分析工具集
 
-**文件**: `src/nano_code/tools/performance_tools.py`
+**文件**: `src/jojo_code/tools/performance_tools.py`
 
 **工具列表**:
 - `profile_python_file(file_path, args="")` - 性能分析
@@ -159,7 +159,7 @@ git_log(".", limit=5)
 git_blame("important_file.py")
 ```
 
-## 🚀 对 Nano-Code 项目的价值
+## 🚀 对 jojo-Code 项目的价值
 
 ### 1. 功能增强
 - 从基础文件操作扩展到完整的代码分析
@@ -205,7 +205,7 @@ git_blame("important_file.py")
 
 ## 📝 总结
 
-通过这次增强，Nano-Code 项目从一个简单的文件操作工具升级为一个功能完整的编码助手。新增的 13 个工具覆盖了代码分析、版本控制和性能优化的核心需求，同时保持了项目的简洁性和可扩展性。
+通过这次增强，jojo-Code 项目从一个简单的文件操作工具升级为一个功能完整的编码助手。新增的 13 个工具覆盖了代码分析、版本控制和性能优化的核心需求，同时保持了项目的简洁性和可扩展性。
 
 所有代码都遵循了项目的现有模式和标准，包括：
 - ✅ 完整的测试覆盖
@@ -213,7 +213,7 @@ git_blame("important_file.py")
 - ✅ 清晰的文档和注释
 - ✅ 向后兼容性
 
-这次增强为 Nano-Code 项目奠定了坚实的基础，使其能够更好地帮助用户理解和改进他们的代码。
+这次增强为 jojo-Code 项目奠定了坚实的基础，使其能够更好地帮助用户理解和改进他们的代码。
 
 ---
 
@@ -222,4 +222,4 @@ git_blame("important_file.py")
 **测试覆盖**: ✅ 100% 通过率  
 **文档完整**: ✅ 包含演示和说明  
 
-🎉 **Nano-Code 现在拥有了强大的工具能力！**
+🎉 **jojo-Code 现在拥有了强大的工具能力！**

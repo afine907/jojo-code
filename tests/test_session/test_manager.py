@@ -1,4 +1,4 @@
-from nano_code.session.manager import SessionManager
+from jojo_code.session.manager import SessionManager
 
 
 def test_create_and_save_session(tmp_path):

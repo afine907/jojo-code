@@ -16,10 +16,10 @@
 - 返回详细的执行计划，列出将要进行的操作
 
 ### 3. 实现位置
-- `src/nano_code/agent/modes.py` - 模式定义
-- `src/nano_code/agent/nodes.py` - 修改 execute_node 支持模式检查
-- `src/nano_code/cli/console.py` - 添加模式切换 UI
-- `src/nano_code/tools/registry.py` - 工具分类（读/写）
+- `src/jojo_code/agent/modes.py` - 模式定义
+- `src/jojo_code/agent/nodes.py` - 修改 execute_node 支持模式检查
+- `src/jojo_code/cli/console.py` - 添加模式切换 UI
+- `src/jojo_code/tools/registry.py` - 工具分类（读/写）
 
 ### 4. 测试
 - 测试 Plan 模式下写操作被阻止

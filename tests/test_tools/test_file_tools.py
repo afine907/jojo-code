@@ -2,7 +2,7 @@
 
 import pytest
 
-from nano_code.tools.file_tools import edit_file, list_directory, read_file, write_file
+from jojo_code.tools.file_tools import edit_file, list_directory, read_file, write_file
 
 
 class TestReadFile:

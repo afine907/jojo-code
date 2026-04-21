@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
-from nano_code.tools.performance_tools import (
+from jojo_code.tools.performance_tools import (
     analyze_function_complexity,
     benchmark_code_snippet,
     profile_python_file,
@@ -37,7 +37,7 @@ class TestProfilePythonFile:
         result = profile_python_file.invoke(str(file_path))
         assert "不是 Python 文件" in result
 
-    @patch("nano_code.tools.performance_tools.subprocess.run")
+    @patch("jojo_code.tools.performance_tools.subprocess.run")
     def test_profile_with_args(self, mock_run, tmp_path):
         """应该能传递命令行参数"""
         file_path = tmp_path / "test.py"

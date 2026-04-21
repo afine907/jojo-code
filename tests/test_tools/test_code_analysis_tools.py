@@ -1,6 +1,6 @@
 """代码分析工具测试"""
 
-from nano_code.tools.code_analysis_tools import (
+from jojo_code.tools.code_analysis_tools import (
     analyze_python_file,
     check_code_style,
     find_python_dependencies,

@@ -1,5 +1,5 @@
 """
-Nano Code - Core 模块单元测试
+jojo Code - Core 模块单元测试
 """
 
 
@@ -8,7 +8,7 @@ class TestConfig:
 
     def test_default_config(self):
         """测试默认配置"""
-        from nano_code.core.config import get_settings
+        from jojo_code.core.config import get_settings
 
         settings = get_settings()
         assert settings.model is not None
@@ -21,7 +21,7 @@ class TestSettings:
     def test_settings_defaults(self):
         """测试默认设置"""
 
-        from nano_code.core.config import Settings
+        from jojo_code.core.config import Settings
 
         settings = Settings()
         assert settings.model == "gpt-4o-mini"
@@ -33,7 +33,7 @@ class TestGetSettings:
 
     def test_get_settings_singleton(self):
         """测试单例模式"""
-        from nano_code.core.config import get_settings
+        from jojo_code.core.config import get_settings
 
         settings1 = get_settings()
         settings2 = get_settings()
@@ -46,14 +46,14 @@ class TestCompatibility:
 
     def test_config_imports(self):
         """测试配置导入"""
-        from nano_code.core.config import Config, Settings
+        from jojo_code.core.config import Config, Settings
 
         assert Config is not None
         assert Settings is not None
 
     def test_llm_imports(self):
         """测试 LLM 导入"""
-        from nano_code.core.llm import (
+        from jojo_code.core.llm import (
             get_llm,
         )
 

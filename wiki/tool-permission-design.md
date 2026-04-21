@@ -45,7 +45,7 @@ class PermissionLevel(Enum):
 ## 4. 配置结构设计
 
 ```yaml
-# .nano-code/permissions.yaml
+# .jojo-code/permissions.yaml
 
 # 工作空间根目录（文件操作限制在此目录内）
 workspace:
@@ -128,7 +128,7 @@ global:
   
   # 审计日志
   audit_log: true
-  audit_log_path: ".nano-code/audit.log"
+  audit_log_path: ".jojo-code/audit.log"
 ```
 
 ## 5. 核心类设计
@@ -136,7 +136,7 @@ global:
 ### 5.1 权限检查结果
 
 ```python
-# src/nano_code/security/permission.py
+# src/jojo_code/security/permission.py
 
 from dataclasses import dataclass
 from enum import Enum
@@ -173,7 +173,7 @@ class PermissionResult:
 ### 5.2 权限守卫接口
 
 ```python
-# src/nano_code/security/guards.py
+# src/jojo_code/security/guards.py
 
 from abc import ABC, abstractmethod
 from typing import Any
@@ -197,14 +197,14 @@ class BaseGuard(ABC):
 ### 5.3 路径守卫
 
 ```python
-# src/nano_code/security/path_guard.py
+# src/jojo_code/security/path_guard.py
 
 import fnmatch
 from pathlib import Path
 from typing import Any
 
-from nano_code.security.guards import BaseGuard
-from nano_code.security.permission import PermissionLevel, PermissionResult
+from jojo_code.security.guards import BaseGuard
+from jojo_code.security.permission import PermissionLevel, PermissionResult
 
 
 class PathGuard(BaseGuard):
@@ -307,13 +307,13 @@ class PathGuard(BaseGuard):
 ### 5.4 命令守卫
 
 ```python
-# src/nano_code/security/command_guard.py
+# src/jojo_code/security/command_guard.py
 
 import re
 from typing import Any
 
-from nano_code.security.guards import BaseGuard
-from nano_code.security.permission import PermissionLevel, PermissionResult
+from jojo_code.security.guards import BaseGuard
+from jojo_code.security.permission import PermissionLevel, PermissionResult
 
 
 class CommandGuard(BaseGuard):
@@ -410,7 +410,7 @@ class CommandGuard(BaseGuard):
 ### 5.5 权限管理器
 
 ```python
-# src/nano_code/security/manager.py
+# src/jojo_code/security/manager.py
 
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -418,10 +418,10 @@ from typing import Any
 
 import yaml
 
-from nano_code.security.guards import BaseGuard
-from nano_code.security.path_guard import PathGuard
-from nano_code.security.command_guard import CommandGuard
-from nano_code.security.permission import PermissionLevel, PermissionResult
+from jojo_code.security.guards import BaseGuard
+from jojo_code.security.path_guard import PathGuard
+from jojo_code.security.command_guard import CommandGuard
+from jojo_code.security.permission import PermissionLevel, PermissionResult
 
 
 @dataclass
@@ -440,7 +440,7 @@ class PermissionConfig:
     allow_network: bool = False
     max_tool_calls: int = 100
     audit_log: bool = True
-    audit_log_path: Path = Path(".nano-code/audit.log")
+    audit_log_path: Path = Path(".jojo-code/audit.log")
     
     @classmethod
     def from_yaml(cls, path: Path) -> "PermissionConfig":
@@ -465,7 +465,7 @@ class PermissionConfig:
             allow_network=data.get("shell", {}).get("allow_network", False),
             max_tool_calls=data.get("global", {}).get("max_tool_calls", 100),
             audit_log=data.get("global", {}).get("audit_log", True),
-            audit_log_path=Path(data.get("global", {}).get("audit_log_path", ".nano-code/audit.log")),
+            audit_log_path=Path(data.get("global", {}).get("audit_log_path", ".jojo-code/audit.log")),
         )
 
 
@@ -568,7 +568,7 @@ class PermissionManager:
 ### 6.1 修改 ToolRegistry
 
 ```python
-# src/nano_code/tools/registry.py (修改后)
+# src/jojo_code/tools/registry.py (修改后)
 
 class ToolRegistry:
     """工具注册中心"""
@@ -611,7 +611,7 @@ class ToolRegistry:
 ### 6.2 CLI 确认交互
 
 ```python
-# src/nano_code/cli/confirm.py
+# src/jojo_code/cli/confirm.py
 
 from rich.console import Console
 from rich.panel import Panel
@@ -649,11 +649,11 @@ def request_user_confirmation(result: PermissionResult) -> bool:
 ```python
 # 初始化
 from pathlib import Path
-from nano_code.security.manager import PermissionConfig, PermissionManager
-from nano_code.tools.registry import ToolRegistry
+from jojo_code.security.manager import PermissionConfig, PermissionManager
+from jojo_code.tools.registry import ToolRegistry
 
 # 加载配置
-config = PermissionConfig.from_yaml(Path(".nano-code/permissions.yaml"))
+config = PermissionConfig.from_yaml(Path(".jojo-code/permissions.yaml"))
 
 # 创建权限管理器
 permission_manager = PermissionManager(config)
@@ -677,7 +677,7 @@ except PermissionError as e:
 ### 8.1 开发模式（宽松）
 
 ```yaml
-# .nano-code/permissions.yaml (开发模式)
+# .jojo-code/permissions.yaml (开发模式)
 workspace:
   root: "."
   allow_outside: false
@@ -699,7 +699,7 @@ shell:
 ### 8.2 生产模式（严格）
 
 ```yaml
-# .nano-code/permissions.yaml (生产模式)
+# .jojo-code/permissions.yaml (生产模式)
 workspace:
   root: "/app/workspace"
   allow_outside: false

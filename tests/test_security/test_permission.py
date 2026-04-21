@@ -4,10 +4,10 @@ from pathlib import Path
 
 import pytest
 
-from nano_code.security.command_guard import CommandGuard
-from nano_code.security.manager import PermissionConfig, PermissionManager
-from nano_code.security.path_guard import PathGuard
-from nano_code.security.permission import PermissionLevel, PermissionResult
+from jojo_code.security.command_guard import CommandGuard
+from jojo_code.security.manager import PermissionConfig, PermissionManager
+from jojo_code.security.path_guard import PathGuard
+from jojo_code.security.permission import PermissionLevel, PermissionResult
 
 
 class TestPermissionLevel:

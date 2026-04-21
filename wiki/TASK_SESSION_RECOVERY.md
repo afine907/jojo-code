@@ -6,7 +6,7 @@
 ## 需求
 
 ### 1. 会话存储
-- 会话保存到 `~/.nano-code/sessions/<session_id>.json`
+- 会话保存到 `~/.jojo-code/sessions/<session_id>.json`
 - 存储内容：消息历史、工具调用记录、创建时间、更新时间
 - 自动保存间隔：每次交互后
 
@@ -20,10 +20,10 @@
 - `/new` 开始新会话
 
 ### 4. 实现位置
-- `src/nano_code/session/manager.py` - 会话管理器
-- `src/nano_code/session/models.py` - 会话数据模型
-- `src/nano_code/cli/commands.py` - CLI 命令处理
-- `src/nano_code/cli/main.py` - 集成会话管理
+- `src/jojo_code/session/manager.py` - 会话管理器
+- `src/jojo_code/session/models.py` - 会话数据模型
+- `src/jojo_code/cli/commands.py` - CLI 命令处理
+- `src/jojo_code/cli/main.py` - 集成会话管理
 
 ### 5. 数据结构
 ```python
