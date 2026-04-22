@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Text, useInput } from 'ink';
+import { Box, Text, useInput, useApp } from 'ink';
 import type { Mode } from '../app.js';
 
 interface InputBoxProps {
@@ -10,11 +10,21 @@ interface InputBoxProps {
 }
 
 export function InputBox({ onSubmit, disabled, mode, onToggleMode }: InputBoxProps) {
+  const { exit } = useApp();
   const [input, setInput] = useState('');
   const [lines, setLines] = useState<string[]>([]);
+  
+  // 检查是否支持 raw mode
+  const isRawModeSupported = Boolean(process.stdin.isTTY);
 
   useInput((char, key) => {
     if (disabled) return;
+
+    // Ctrl+C 退出
+    if (key.ctrl && char === 'c') {
+      exit();
+      return;
+    }
 
     // Enter 提交 (Shift+Enter 换行在 terminal 中很难检测，用 Tab 代替)
     if (key.return && !key.shift) {
@@ -62,7 +72,7 @@ export function InputBox({ onSubmit, disabled, mode, onToggleMode }: InputBoxPro
     if (char && !key.ctrl && !key.meta) {
       setInput(prev => prev + char);
     }
-  });
+  }, { isActive: isRawModeSupported });
 
   const promptIcon = mode === 'plan' ? '📋' : '🦞';
   const isMultiline = lines.length > 0;
