@@ -1,83 +1,292 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import React from 'react';
+import { render } from 'ink-testing-library';
+import { InputBox } from '../src/components/InputBox.js';
+import type { Mode } from '../src/app.js';
 
-// InputBox uses useInput which requires a TTY, so we test the logic separately
+// Mock useInput - 测试环境没有真实 TTY
+vi.mock('ink', async () => {
+  const actual = await vi.importActual('ink');
+  return {
+    ...actual,
+    useInput: vi.fn(),
+    useApp: () => ({ exit: vi.fn() }),
+  };
+});
 
-describe('InputBox Logic', () => {
-  describe('Input State Management', () => {
-    it('tracks single line input', () => {
-      let input = '';
-      let lines: string[] = [];
+import { useInput } from 'ink';
+
+describe('InputBox', () => {
+  let inputHandler: ((char: string, key: any) => void) | null = null;
+  
+  beforeEach(() => {
+    vi.clearAllMocks();
+    
+    (useInput as any).mockImplementation((handler: any) => {
+      inputHandler = handler;
+    });
+  });
+
+  describe('渲染测试', () => {
+    it('显示 build 模式图标', () => {
+      const onSubmit = vi.fn();
+      const onToggleMode = vi.fn();
       
-      input = 'hello';
-      expect(input).toBe('hello');
+      const { lastFrame } = render(
+        <InputBox 
+          onSubmit={onSubmit}
+          disabled={false}
+          mode="build"
+          onToggleMode={onToggleMode}
+          model="gpt-4o-mini"
+        />
+      );
       
-      input = input.slice(0, -1);
-      expect(input).toBe('hell');
+      expect(lastFrame()).toContain('🦞');
     });
 
-    it('handles multiline mode', () => {
-      let input = 'first line';
-      let lines: string[] = [];
+    it('显示 plan 模式图标', () => {
+      const onSubmit = vi.fn();
+      const onToggleMode = vi.fn();
       
-      lines.push(input);
-      input = '';
+      const { lastFrame } = render(
+        <InputBox 
+          onSubmit={onSubmit}
+          disabled={false}
+          mode="plan"
+          onToggleMode={onToggleMode}
+          model="gpt-4o-mini"
+        />
+      );
       
-      input = 'second line';
-      lines.push(input);
-      
-      expect(lines.length).toBe(2);
-      expect(lines[0]).toBe('first line');
-      expect(lines[1]).toBe('second line');
+      expect(lastFrame()).toContain('📋');
     });
 
-    it('handles backspace in multiline', () => {
-      let input = '';
-      let lines = ['first line', 'second line'];
+    it('显示帮助提示', () => {
+      const onSubmit = vi.fn();
+      const onToggleMode = vi.fn();
       
-      if (input === '' && lines.length > 0) {
-        input = lines.pop() || '';
+      const { lastFrame } = render(
+        <InputBox 
+          onSubmit={onSubmit}
+          disabled={false}
+          mode="build"
+          onToggleMode={onToggleMode}
+          model="gpt-4o-mini"
+        />
+      );
+      
+      expect(lastFrame()).toContain('/help');
+    });
+
+    it('显示模型名称', () => {
+      const onSubmit = vi.fn();
+      const onToggleMode = vi.fn();
+      
+      const { lastFrame } = render(
+        <InputBox 
+          onSubmit={onSubmit}
+          disabled={false}
+          mode="build"
+          onToggleMode={onToggleMode}
+          model="gpt-4o-mini"
+        />
+      );
+      
+      expect(lastFrame()).toContain('gpt-4o-mini');
+    });
+
+    it('disabled 时显示加载状态', () => {
+      const onSubmit = vi.fn();
+      const onToggleMode = vi.fn();
+      
+      const { lastFrame } = render(
+        <InputBox 
+          onSubmit={onSubmit}
+          disabled={true}
+          mode="build"
+          onToggleMode={onToggleMode}
+          model="gpt-4o-mini"
+        />
+      );
+      
+      expect(lastFrame()).toContain('...');
+    });
+  });
+
+  describe('输入交互测试', () => {
+    it('输入字符', () => {
+      const onSubmit = vi.fn();
+      const onToggleMode = vi.fn();
+      
+      render(
+        <InputBox 
+          onSubmit={onSubmit}
+          disabled={false}
+          mode="build"
+          onToggleMode={onToggleMode}
+          model="gpt-4o-mini"
+        />
+      );
+      
+      expect(inputHandler).not.toBeNull();
+    });
+
+    it('Enter 提交消息', () => {
+      const onSubmit = vi.fn();
+      const onToggleMode = vi.fn();
+      
+      render(
+        <InputBox 
+          onSubmit={onSubmit}
+          disabled={false}
+          mode="build"
+          onToggleMode={onToggleMode}
+          model="gpt-4o-mini"
+        />
+      );
+      
+      if (inputHandler) {
+        inputHandler('h', { ctrl: false, meta: false, shift: false });
+        inputHandler('i', { ctrl: false, meta: false, shift: false });
+        inputHandler('', { ctrl: false, meta: false, shift: false, return: true });
+        
+        expect(onSubmit).toHaveBeenCalledWith('hi');
       }
+    });
+
+    it('disabled 时不响应输入', () => {
+      const onSubmit = vi.fn();
+      const onToggleMode = vi.fn();
       
-      expect(lines.length).toBe(1);
-      expect(input).toBe('second line');
+      render(
+        <InputBox 
+          onSubmit={onSubmit}
+          disabled={true}
+          mode="build"
+          onToggleMode={onToggleMode}
+          model="gpt-4o-mini"
+        />
+      );
+      
+      if (inputHandler) {
+        inputHandler('a', { ctrl: false, meta: false, shift: false });
+        inputHandler('', { ctrl: false, meta: false, shift: false, return: true });
+        
+        expect(onSubmit).not.toHaveBeenCalled();
+      }
+    });
+
+    it('Backspace 删除字符', () => {
+      const onSubmit = vi.fn();
+      const onToggleMode = vi.fn();
+      
+      render(
+        <InputBox 
+          onSubmit={onSubmit}
+          disabled={false}
+          mode="build"
+          onToggleMode={onToggleMode}
+          model="gpt-4o-mini"
+        />
+      );
+      
+      if (inputHandler) {
+        inputHandler('a', { ctrl: false, meta: false, shift: false });
+        inputHandler('b', { ctrl: false, meta: false, shift: false });
+        inputHandler('', { ctrl: false, meta: false, shift: false, backspace: true });
+        inputHandler('', { ctrl: false, meta: false, shift: false, return: true });
+        
+        expect(onSubmit).toHaveBeenCalledWith('a');
+      }
+    });
+
+    it('Tab 换行', () => {
+      const onSubmit = vi.fn();
+      const onToggleMode = vi.fn();
+      
+      render(
+        <InputBox 
+          onSubmit={onSubmit}
+          disabled={false}
+          mode="build"
+          onToggleMode={onToggleMode}
+          model="gpt-4o-mini"
+        />
+      );
+      
+      if (inputHandler) {
+        inputHandler('l', { ctrl: false, meta: false, shift: false });
+        inputHandler('1', { ctrl: false, meta: false, shift: false });
+        inputHandler('', { ctrl: false, meta: false, shift: false, tab: true });
+        inputHandler('l', { ctrl: false, meta: false, shift: false });
+        inputHandler('2', { ctrl: false, meta: false, shift: false });
+        inputHandler('', { ctrl: false, meta: false, shift: false, return: true });
+        
+        expect(onSubmit).toHaveBeenCalledWith('l1\nl2');
+      }
+    });
+
+    it('Escape 取消输入', () => {
+      const onSubmit = vi.fn();
+      const onToggleMode = vi.fn();
+      
+      render(
+        <InputBox 
+          onSubmit={onSubmit}
+          disabled={false}
+          mode="build"
+          onToggleMode={onToggleMode}
+          model="gpt-4o-mini"
+        />
+      );
+      
+      if (inputHandler) {
+        inputHandler('t', { ctrl: false, meta: false, shift: false });
+        inputHandler('e', { ctrl: false, meta: false, shift: false });
+        inputHandler('s', { ctrl: false, meta: false, shift: false });
+        inputHandler('t', { ctrl: false, meta: false, shift: false });
+        inputHandler('', { ctrl: false, meta: false, shift: false, escape: true });
+        inputHandler('', { ctrl: false, meta: false, shift: false, return: true });
+        
+        expect(onSubmit).not.toHaveBeenCalled();
+      }
     });
   });
 
-  describe('Mode Icons', () => {
-    it('uses correct icons for modes', () => {
-      const buildIcon = '🦞';
-      const planIcon = '📋';
+  describe('模式显示', () => {
+    it('显示 BUILD 模式', () => {
+      const onSubmit = vi.fn();
+      const onToggleMode = vi.fn();
       
-      expect(buildIcon).toBe('🦞');
-      expect(planIcon).toBe('📋');
-    });
-  });
-
-  describe('Submit Logic', () => {
-    it('combines lines on submit', () => {
-      const lines = ['first', 'second', 'third'];
-      const input = 'fourth';
+      const { lastFrame } = render(
+        <InputBox 
+          onSubmit={onSubmit}
+          disabled={false}
+          mode="build"
+          onToggleMode={onToggleMode}
+          model="gpt-4o-mini"
+        />
+      );
       
-      const allLines = [...lines, input].filter(l => l.trim());
-      const result = allLines.join('\n');
-      
-      expect(result).toBe('first\nsecond\nthird\nfourth');
+      expect(lastFrame()).toContain('BUILD');
     });
 
-    it('handles empty submit', () => {
-      const lines: string[] = [];
-      const input = '';
+    it('显示 PLAN 模式', () => {
+      const onSubmit = vi.fn();
+      const onToggleMode = vi.fn();
       
-      const allLines = [...lines, input].filter(l => l.trim());
+      const { lastFrame } = render(
+        <InputBox 
+          onSubmit={onSubmit}
+          disabled={false}
+          mode="plan"
+          onToggleMode={onToggleMode}
+          model="gpt-4o-mini"
+        />
+      );
       
-      expect(allLines.length).toBe(0);
-    });
-  });
-
-  describe('Model Display', () => {
-    it('shows model name in status', () => {
-      const model = 'gpt-4o-mini';
-      expect(model).toContain('gpt');
+      expect(lastFrame()).toContain('PLAN');
     });
   });
 });

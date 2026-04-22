@@ -20,6 +20,7 @@ export function InputBox({ onSubmit, disabled, mode, onToggleMode, model }: Inpu
   useInput((char, key) => {
     if (disabled) return;
 
+    // Ctrl+C 退出
     if (key.ctrl && char === 'c') {
       exit();
       return;
@@ -64,7 +65,7 @@ export function InputBox({ onSubmit, disabled, mode, onToggleMode, model }: Inpu
       return;
     }
 
-    // 普通字符
+    // 普通字符输入
     if (char && !key.ctrl && !key.meta) {
       setInput(prev => prev + char);
     }
