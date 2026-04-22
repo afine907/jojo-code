@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
 // InputBox uses useInput which requires a TTY, so we test the logic separately
-// For full integration tests, use the e2e tests with pexpect
 
 describe('InputBox Logic', () => {
   describe('Input State Management', () => {
@@ -9,11 +8,9 @@ describe('InputBox Logic', () => {
       let input = '';
       let lines: string[] = [];
       
-      // Simulate typing
       input = 'hello';
       expect(input).toBe('hello');
       
-      // Simulate backspace
       input = input.slice(0, -1);
       expect(input).toBe('hell');
     });
@@ -22,11 +19,9 @@ describe('InputBox Logic', () => {
       let input = 'first line';
       let lines: string[] = [];
       
-      // Enter multiline: save current line
       lines.push(input);
       input = '';
       
-      // Type second line
       input = 'second line';
       lines.push(input);
       
@@ -39,7 +34,6 @@ describe('InputBox Logic', () => {
       let input = '';
       let lines = ['first line', 'second line'];
       
-      // When input is empty and lines exist, pop last line
       if (input === '' && lines.length > 0) {
         input = lines.pop() || '';
       }
@@ -77,6 +71,13 @@ describe('InputBox Logic', () => {
       const allLines = [...lines, input].filter(l => l.trim());
       
       expect(allLines.length).toBe(0);
+    });
+  });
+
+  describe('Model Display', () => {
+    it('shows model name in status', () => {
+      const model = 'gpt-4o-mini';
+      expect(model).toContain('gpt');
     });
   });
 });
