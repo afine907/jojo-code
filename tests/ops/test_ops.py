@@ -6,7 +6,10 @@ import pytest
 
 from jojo_code.ops import (
     Collector,
+    Dashboard,
     Exporter,
+    MetricsEngine,
+    MetricsSummary,
     OpsConfig,
     Span,
     SpanStatus,
@@ -291,3 +294,198 @@ class TestOpsConfig:
 
         assert config.enabled is False
         assert config.max_traces_in_memory == 500
+
+
+class TestMetricsEngine:
+    """MetricsEngine 测试"""
+
+    def test_calculate_empty_traces(self):
+        """测试空 Trace 列表"""
+        engine = MetricsEngine([])
+        metrics = engine.calculate()
+
+        assert metrics.total_traces == 0
+        assert metrics.task_success_rate == 0
+
+    def test_calculate_single_trace(self):
+        """测试单个 Trace"""
+        trace = Trace(task="测试任务")
+        trace.spans.append(
+            Span(
+                type=SpanType.TOOL_CALL,
+                name="read_file",
+                status=SpanStatus.COMPLETED,
+            )
+        )
+        trace.spans.append(
+            Span(
+                type=SpanType.THINKING,
+                name="thinking",
+                status=SpanStatus.COMPLETED,
+            )
+        )
+        trace.end_time = datetime.now()
+        trace.status = SpanStatus.COMPLETED
+
+        engine = MetricsEngine([trace])
+        metrics = engine.calculate()
+
+        assert metrics.total_traces == 1
+        assert metrics.completed_traces == 1
+        assert metrics.avg_tool_calls == 1.0
+        assert metrics.avg_thinking_rounds == 1.0
+        assert metrics.task_success_rate == 1.0
+
+    def test_calculate_multiple_traces(self):
+        """测试多个 Trace"""
+        traces = []
+        for i in range(3):
+            trace = Trace(task=f"任务 {i}")
+            trace.spans.append(
+                Span(
+                    type=SpanType.TOOL_CALL,
+                    name="read_file",
+                    status=SpanStatus.COMPLETED,
+                )
+            )
+            trace.end_time = datetime.now()
+            trace.status = SpanStatus.COMPLETED
+            traces.append(trace)
+
+        # 一个失败的 Trace
+        failed_trace = Trace(task="失败任务")
+        failed_trace.spans.append(
+            Span(
+                type=SpanType.TOOL_CALL,
+                name="read_file",
+                status=SpanStatus.FAILED,
+                error="文件不存在",
+            )
+        )
+        failed_trace.end_time = datetime.now()
+        failed_trace.status = SpanStatus.FAILED
+        traces.append(failed_trace)
+
+        engine = MetricsEngine(traces)
+        metrics = engine.calculate()
+
+        assert metrics.total_traces == 4
+        assert metrics.completed_traces == 3
+        assert metrics.failed_traces == 1
+        assert metrics.task_success_rate == 0.75
+        assert "read_file" in metrics.tool_usage
+
+    def test_filter_by_session(self):
+        """测试按会话过滤"""
+        trace1 = Trace(task="任务 1", session_id="session-1")
+        trace2 = Trace(task="任务 2", session_id="session-2")
+
+        engine = MetricsEngine([trace1, trace2])
+        filtered = engine.filter_by_session("session-1")
+
+        assert len(filtered) == 1
+        assert filtered[0].session_id == "session-1"
+
+    def test_get_tool_usage_ranking(self):
+        """测试工具使用排名"""
+        trace = Trace(task="测试")
+        trace.spans.append(
+            Span(type=SpanType.TOOL_CALL, name="read_file", status=SpanStatus.COMPLETED)
+        )
+        trace.spans.append(
+            Span(type=SpanType.TOOL_CALL, name="read_file", status=SpanStatus.COMPLETED)
+        )
+        trace.spans.append(
+            Span(type=SpanType.TOOL_CALL, name="write_file", status=SpanStatus.COMPLETED)
+        )
+
+        engine = MetricsEngine([trace])
+        ranking = engine.get_tool_usage_ranking()
+
+        assert len(ranking) == 2
+        assert ranking[0][0] == "read_file"
+        assert ranking[0][1] == 2
+
+    def test_get_performance_stats(self):
+        """测试性能统计"""
+        traces = []
+        for duration in [100, 200, 300, 400, 500]:
+            trace = Trace(task="测试")
+            trace.start_time = datetime.now()
+            trace.end_time = datetime.fromtimestamp(trace.start_time.timestamp() + duration / 1000)
+            traces.append(trace)
+
+        engine = MetricsEngine(traces)
+        stats = engine.get_performance_stats()
+
+        assert stats["min_duration_ms"] >= 0
+        assert stats["max_duration_ms"] >= stats["min_duration_ms"]
+
+
+class TestMetricsSummary:
+    """MetricsSummary 测试"""
+
+    def test_to_dict(self):
+        """测试序列化"""
+        metrics = MetricsSummary(
+            total_traces=10,
+            completed_traces=8,
+            failed_traces=2,
+            avg_thinking_rounds=3.5,
+            avg_tool_calls=2.1,
+            avg_duration_ms=1500.0,
+            tool_success_rate=0.85,
+            task_success_rate=0.80,
+            tool_usage={"read_file": 15},
+            error_types={"错误": 2},
+        )
+
+        data = metrics.to_dict()
+
+        assert data["total_traces"] == 10
+        assert data["task_success_rate"] == 0.80
+        assert "tool_usage" in data
+
+
+class TestDashboard:
+    """Dashboard 测试"""
+
+    def test_dashboard_creation(self):
+        """测试创建 Dashboard"""
+        dashboard = Dashboard()
+        assert dashboard.console is not None
+
+    def test_show_current_trace(self, capsys):
+        """测试显示当前 Trace"""
+        trace = Trace(task="测试任务")
+        trace.spans.append(
+            Span(type=SpanType.TOOL_CALL, name="read_file", status=SpanStatus.COMPLETED)
+        )
+        trace.end_time = datetime.now()
+        trace.status = SpanStatus.COMPLETED
+
+        dashboard = Dashboard()
+        dashboard.show_current_trace(trace)
+
+        # 只要不报错就行
+        assert True
+
+    def test_show_metrics(self):
+        """测试显示指标"""
+        metrics = MetricsSummary(
+            total_traces=10,
+            completed_traces=8,
+            failed_traces=2,
+            avg_thinking_rounds=3.5,
+            avg_tool_calls=2.1,
+            avg_duration_ms=1500.0,
+            tool_success_rate=0.85,
+            task_success_rate=0.80,
+            tool_usage={"read_file": 15, "write_file": 8},
+        )
+
+        dashboard = Dashboard()
+        dashboard.show_metrics(metrics)
+
+        # 只要不报错就行
+        assert True

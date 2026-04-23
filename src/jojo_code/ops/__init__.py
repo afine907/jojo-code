@@ -20,7 +20,9 @@ Usage:
 
 from .collector import Collector
 from .config import OpsConfig
+from .dashboard import Dashboard
 from .exporter import Exporter
+from .metrics import MetricsEngine, MetricsSummary, TraceMetrics
 from .models import Span, SpanStatus, SpanType, Trace
 
 __all__ = [
@@ -33,6 +35,12 @@ __all__ = [
     "OpsConfig",
     # 收集器
     "Collector",
+    # 指标
+    "MetricsEngine",
+    "MetricsSummary",
+    "TraceMetrics",
     # 导出器
     "Exporter",
+    # 面板
+    "Dashboard",
 ]
