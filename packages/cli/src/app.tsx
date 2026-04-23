@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { Box, Text, useApp } from 'ink';
 import { ChatView } from './components/ChatView.js';
 import { InputBox } from './components/InputBox.js';
+import { PermissionRequest } from './components/PermissionRequest.js';
 import { useAgent } from './hooks/useAgent.js';
 
 export type Mode = 'plan' | 'build';
@@ -30,8 +31,12 @@ export function App() {
     isLoading,
     model,
     toolCalls,
+    permissionRequest,
     sendMessage,
     clearHistory,
+    handlePermissionDecision,
+    getPermissionMode,
+    setPermissionMode,
   } = useAgent();
 
   const handleSubmit = useCallback(async (input: string) => {
@@ -51,6 +56,8 @@ export function App() {
         console.log(`
 可用命令:
   /mode [plan|build]  - 切换模式 (默认: build)
+  /permission [mode]  - 查看/设置权限模式 (yolo|auto_approve|interactive|strict|readonly)
+  /audit              - 查看最近审计日志
   /clear              - 清空对话
   /exit, /quit        - 退出
         `);
@@ -64,6 +71,25 @@ export function App() {
         } else {
           setMode(m => m === 'plan' ? 'build' : 'plan');
         }
+        break;
+      case '/permission':
+        if (parts[1]) {
+          setPermissionMode(parts[1]).then(() => {
+            console.log(`权限模式已切换为: ${parts[1]}`);
+          }).catch((err) => {
+            console.log(`设置失败: ${err.message}`);
+          });
+        } else {
+          getPermissionMode().then((mode) => {
+            console.log(`当前权限模式: ${mode}`);
+          }).catch(() => {
+            console.log('获取权限模式失败');
+          });
+        }
+        break;
+      case '/audit':
+        // TODO: 显示审计日志
+        console.log('审计日志功能开发中...');
         break;
       case '/exit':
       case '/quit':
@@ -85,6 +111,18 @@ export function App() {
         <ChatView messages={messages} isLoading={isLoading} />
       </Box>
       
+      {/* 权限请求对话框 */}
+      {permissionRequest && (
+        <PermissionRequest
+          tool={permissionRequest.tool}
+          action={permissionRequest.action}
+          params={permissionRequest.params}
+          riskLevel={permissionRequest.riskLevel}
+          reason={permissionRequest.reason}
+          onDecision={handlePermissionDecision}
+        />
+      )}
+      
       {/* 工具执行状态 - 简洁版 */}
       {toolCalls.length > 0 && (
         <Box paddingX={1}>
@@ -97,7 +135,7 @@ export function App() {
       {/* 输入框 */}
       <InputBox 
         onSubmit={handleSubmit} 
-        disabled={isLoading}
+        disabled={isLoading || permissionRequest !== null}
         mode={mode}
         onToggleMode={toggleMode}
         model={model}

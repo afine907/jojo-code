@@ -8,8 +8,10 @@ from typing import Any
 
 from jojo_code.security.command_guard import CommandGuard
 from jojo_code.security.guards import BaseGuard
+from jojo_code.security.modes import PermissionMode, RiskLevel
 from jojo_code.security.path_guard import PathGuard
 from jojo_code.security.permission import PermissionLevel, PermissionResult
+from jojo_code.security.risk import assess_risk
 
 
 @dataclass
@@ -40,6 +42,9 @@ class PermissionConfig:
     max_tool_calls: int = 100
     audit_log: bool = True
     audit_log_path: Path = field(default_factory=lambda: Path(".jojo-code/audit.log"))
+
+    # 权限模式
+    mode: str = "interactive"  # yolo | auto_approve | interactive | strict | readonly
 
     def __post_init__(self) -> None:
         """确保路径是 Path 对象"""
@@ -134,6 +139,7 @@ class PermissionManager:
     """权限管理器
 
     协调所有权限守卫进行权限检查。
+    支持权限模式和风险评估。
     """
 
     # 日志缓冲区大小
@@ -146,6 +152,7 @@ class PermissionManager:
             config: 权限配置
         """
         self.config = config
+        self._mode = PermissionMode(config.mode)
         self.guards: list[BaseGuard] = []
         self._call_count = 0
         self._audit_log: list[dict[str, Any]] = []
@@ -153,6 +160,20 @@ class PermissionManager:
 
         # 初始化守卫
         self._init_guards()
+
+    @property
+    def mode(self) -> PermissionMode:
+        """获取当前权限模式"""
+        return self._mode
+
+    def set_mode(self, mode: str) -> None:
+        """设置权限模式
+
+        Args:
+            mode: 权限模式字符串 (yolo | auto_approve | interactive | strict | readonly)
+        """
+        self._mode = PermissionMode.from_string(mode)
+        self.config.mode = mode
 
     def _init_guards(self) -> None:
         """初始化权限守卫"""
@@ -177,6 +198,8 @@ class PermissionManager:
     def check(self, tool_name: str, args: dict[str, Any]) -> PermissionResult:
         """检查工具调用权限
 
+        根据权限模式和风险评估决定是否允许执行。
+
         Args:
             tool_name: 工具名称
             args: 工具参数
@@ -184,7 +207,11 @@ class PermissionManager:
         Returns:
             权限检查结果
         """
-        # 检查调用次数限制
+        # 1. YOLO 模式直接放行
+        if self._mode == PermissionMode.YOLO:
+            return PermissionResult(PermissionLevel.ALLOW, tool_name, args)
+
+        # 2. 检查调用次数限制
         if self._call_count >= self.config.max_tool_calls:
             return PermissionResult(
                 PermissionLevel.DENY,
@@ -193,7 +220,20 @@ class PermissionManager:
                 reason=f"已达到最大调用次数 {self.config.max_tool_calls}",
             )
 
-        # 运行所有守卫检查，取最严格的结果
+        # 3. 评估风险等级
+        risk = assess_risk(tool_name, args)
+
+        # 4. ReadOnly 模式检查
+        if self._mode == PermissionMode.READONLY:
+            if risk in ("medium", "high", "critical"):
+                return PermissionResult(
+                    PermissionLevel.DENY,
+                    tool_name,
+                    args,
+                    reason=f"ReadOnly 模式拒绝 {risk} 风险操作",
+                )
+
+        # 5. 运行守卫检查
         final_result = PermissionResult(PermissionLevel.ALLOW, tool_name, args)
 
         for guard in self.guards:
@@ -210,6 +250,39 @@ class PermissionManager:
             # 如果被拒绝，立即返回
             if result.denied:
                 return result
+
+        # 6. 根据权限模式和风险等级调整决策
+        if final_result.level == PermissionLevel.ALLOW:
+            risk_level = RiskLevel.from_string(risk)
+
+            # Strict 模式: 所有操作都需确认
+            if self._mode == PermissionMode.STRICT:
+                return PermissionResult(
+                    PermissionLevel.CONFIRM,
+                    tool_name,
+                    args,
+                    reason=f"Strict 模式需要确认所有操作 (风险: {risk})",
+                )
+
+            # Interactive 模式: 中高风险需确认
+            if self._mode == PermissionMode.INTERACTIVE:
+                if risk_level >= RiskLevel.MEDIUM:
+                    return PermissionResult(
+                        PermissionLevel.CONFIRM,
+                        tool_name,
+                        args,
+                        reason=f"操作需要确认 (风险: {risk})",
+                    )
+
+            # Auto-Approve 模式: 高风险需确认
+            if self._mode == PermissionMode.AUTO_APPROVE:
+                if risk_level >= RiskLevel.HIGH:
+                    return PermissionResult(
+                        PermissionLevel.CONFIRM,
+                        tool_name,
+                        args,
+                        reason=f"高风险操作需要确认 (风险: {risk})",
+                    )
 
         self._call_count += 1
         return final_result

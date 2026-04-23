@@ -190,4 +190,71 @@ export class JsonRpcClient {
       this.process = null;
     }
   }
+
+  // ========== 权限相关方法 ==========
+
+  /**
+   * 获取当前权限模式
+   */
+  async getPermissionMode(): Promise<string> {
+    const result = await this.request<{ status: string; mode: string }>(
+      'permission/mode',
+      {}
+    );
+    return result.mode;
+  }
+
+  /**
+   * 设置权限模式
+   */
+  async setPermissionMode(mode: string): Promise<void> {
+    await this.request('permission/mode', { mode });
+  }
+
+  /**
+   * 确认权限请求
+   */
+  async permissionConfirm(sessionId: string, approved: boolean): Promise<void> {
+    await this.request('permission/confirm', { session_id: sessionId, approved });
+  }
+
+  /**
+   * 查询审计日志
+   */
+  async queryAudit(params: {
+    start_date?: string;
+    end_date?: string;
+    tool?: string;
+    allowed?: boolean;
+    risk_level?: string;
+    limit?: number;
+  }): Promise<any[]> {
+    const result = await this.request<{ status: string; results: any[] }>(
+      'audit/query',
+      params
+    );
+    return result.results;
+  }
+
+  /**
+   * 获取审计统计
+   */
+  async getAuditStats(date?: string): Promise<any> {
+    const result = await this.request<{ status: string; statistics: any }>(
+      'audit/stats',
+      { date }
+    );
+    return result.statistics;
+  }
+
+  /**
+   * 获取最近的审计事件
+   */
+  async getRecentAudit(limit: number = 20): Promise<any[]> {
+    const result = await this.request<{ status: string; results: any[] }>(
+      'audit/recent',
+      { limit }
+    );
+    return result.results;
+  }
 }
