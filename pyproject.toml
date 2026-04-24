@@ -49,6 +49,7 @@ dev = [
     "ruff>=0.4",
     "python-dotenv>=1",
     "pexpect>=4.9",  # E2E CLI testing
+    "rich>=13",  # AgentOps Dashboard
 ]
 
 [project.urls]
