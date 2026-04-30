@@ -2,16 +2,14 @@
 
 # 🤖 jojo-Code
 
-**A coding agent powered by jojo AI - TypeScript CLI + Python LangGraph Core**
+**A coding agent powered by LangGraph - Python CLI + WebSocket Server**
 
 [![Python](https://img.shields.io/badge/Python-3.11%2B-blue?logo=python&logoColor=white)](https://python.org)
 [![LangGraph](https://img.shields.io/badge/LangGraph-0.3%2B-green?logo=langchain&logoColor=white)](https://github.com/langchain-ai/langgraph)
+[![Textual](https://img.shields.io/badge/Textual-0.40%2B-blueviolet?logo=python&logoColor=white)](https://github.com/Textualize/textual)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/Tests-passing-brightgreen)](tests/)
 
-*从零构建编码 Agent，掌握 LLM 应用核心架构*
-
-[English](#-特色) · [快速开始](#-快速开始) · [架构设计](#️-架构设计) · [学习路径](#-学习路径)
+*全 Python 编码 Agent：Textual TUI + WebSocket Server + LangGraph*
 
 </div>
 
@@ -19,36 +17,13 @@
 
 ## ✨ 特色
 
-- 🔧 **工具系统** - 文件读写、代码搜索、Shell 执行，安全的工具抽象
-- 🧠 **Agent 循环** - Thinking → Tool Call → Execute → Observe 完整闭环
+- 🔧 **20+ 工具** - 文件读写、代码搜索、Shell 执行、Git 操作、Web 搜索
+- 🧠 **Agent 循环** - LangGraph 状态机：Thinking → Tool Call → Execute → Observe
 - 💾 **智能记忆** - 自动 Token 计数与上下文压缩
-- 🖥️ **现代 CLI** - TypeScript ink 终端界面，React 风格组件
-- 🧪 **TDD 驱动** - 完整测试覆盖，测试即文档
-
----
-
-## 📸 演示
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│  🤖 jojo-Code                                               │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  👤 读取 README.md 并总结项目                                │
-│                                                             │
-│  🤖 调用 read_file("README.md")                             │
-│  ────────────────────────────────────────────               │
-│  📄 这是一个使用 LangGraph 构建的编码 Agent 项目...          │
-│                                                             │
-│  👤 搜索所有 TODO 注释                                       │
-│                                                             │
-│  🤖 调用 grep_search("TODO")                                │
-│  ────────────────────────────────────────────               │
-│  📁 src/jojo_code/tools/file_tools.py:42                    │
-│     # TODO: add encoding detection                          │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
-```
+- 🖥️ **现代 TUI** - Textual 框架终端界面，流式输出
+- 🌐 **WebSocket 服务** - CLI 与 Server 分离，支持远程部署
+- 🐳 **Docker 支持** - 一键部署，环境变量配置
+- 🧪 **TDD 驱动** - 350+ 测试覆盖
 
 ---
 
@@ -57,142 +32,120 @@
 ### 安装
 
 ```bash
-# 克隆项目
-git clone https://github.com/afine907/jojo-code.git
-cd jojo-code
-
-# 安装 Python 依赖
-uv sync
-
-# 安装 Node.js 依赖
-pnpm install
-
-# 运行 CLI
-cd packages/cli && pnpm dev
+pip install jojo-code
 ```
 
 ### 配置
 
-创建 `.env` 文件（参考 `.env.example`）：
-
 ```bash
-# 方式 1: OpenAI 兼容 API（如 LongCat、DeepSeek 等）
-OPENAI_API_KEY=your-api-key
-OPENAI_BASE_URL=https://api.longcat.chat/openai/v1
-MODEL=LongCat-Flash-Chat
+# 设置 API Key
+export OPENAI_API_KEY=your-api-key
 
-# 方式 2: Anthropic Claude
-# OPENAI_API_KEY=
-# ANTHROPIC_API_KEY=your-anthropic-api-key
-# MODEL=claude-sonnet-4-20250514
-
-# 方式 3: OpenAI 默认
-# OPENAI_API_KEY=your-openai-api-key
-# OPENAI_BASE_URL=
-# JOJO_CODE_MODEL=gpt-4o-mini
+# 或使用 OpenAI 兼容 API
+export OPENAI_API_KEY=your-api-key
+export OPENAI_BASE_URL=https://api.longcat.chat/openai/v1
+export JOJO_CODE_MODEL=LongCat-Flash-Chat
 ```
 
-### 运行
+### 使用
 
 ```bash
-uv run jojo-code
+# 启动 TUI（自动连接本地服务）
+jojo-code
+
+# 或手动启动服务
+jojo-code server start
+jojo-code
 ```
 
 ---
 
-## 🏗️ 架构设计
+## 🏗️ 架构
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│  🖥️  CLI Layer (rich + prompt-toolkit)                      │
-│                                                             │
-│     👤 User Input  ───────────────────▶  📺 Rich Output     │
-└─────────────────────────────┬───────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│  🧠  Agent Loop (LangGraph State Machine)                   │
-│                                                             │
-│     ┌──────────┐      ┌──────────┐      ┌──────────┐       │
-│     │ 💭       │      │ ⚡       │      │ 👁️       │       │
-│     │ Thinking │ ───▶ │ Execute  │ ───▶ │ Observe  │ ──┐   │
-│     └──────────┘      └──────────┘      └──────────┘   │   │
-│          ▲                                              │   │
-│          └──────────────────────────────────────────────┘   │
-└─────────────────────────────┬───────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│  🔧  Tool Layer (LangChain Tools)                           │
-│                                                             │
-│     ┌───────────┐  ┌───────────┐  ┌───────────┐  ┌───────┐ │
-│     │ 📄        │  │ ✏️        │  │ 🔍        │  │ ⚡    │ │
-│     │ read_file │  │write_file │  │grep_search│  │run_cmd│ │
-│     └───────────┘  └───────────┘  └───────────┘  └───────┘ │
-└─────────────────────────────────────────────────────────────┘
+┌──────────────────────┐            ┌─────────────────────────┐
+│ pip install jojo-code│            │ Docker / pip install    │
+│                      │  WebSocket │                         │
+│  Textual CLI (Python)│◄──────────►│  FastAPI + WebSocket    │
+│  流式输出 + TUI      │            │  LangGraph Agent        │
+│                      │            │  20+ Tools              │
+└──────────────────────┘            └─────────────────────────┘
 ```
 
 ### 目录结构
 
 ```text
 src/jojo_code/
-├── agent/          # Agent 核心
-│   ├── graph.py    # LangGraph 状态图定义
-│   ├── state.py    # AgentState 状态结构
-│   └── nodes.py    # thinking/execute 节点
+├── cli/                # Textual TUI
+│   ├── app.py          # 主应用
+│   ├── main.py         # CLI 入口
+│   ├── ws_client.py    # WebSocket 客户端
+│   └── views/          # UI 组件
+│       ├── chat.py     # 消息列表
+│       ├── input_box.py
+│       ├── permission.py
+│       └── status_bar.py
 │
-├── tools/          # 工具实现
+├── server/             # WebSocket Server
+│   ├── ws_server.py    # FastAPI WebSocket
+│   ├── handlers.py     # JSON-RPC handlers
+│   └── jsonrpc.py      # 兼容旧协议
+│
+├── agent/              # LangGraph Agent
+│   ├── graph.py        # 状态图定义
+│   ├── nodes.py        # thinking/execute 节点
+│   └── state.py        # 状态结构
+│
+├── tools/              # 20+ 工具
 │   ├── file_tools.py
+│   ├── shell_tools.py
+│   ├── git_tools.py
 │   ├── search_tools.py
-│   └── shell_tools.py
+│   └── ...
 │
-├── memory/         # 对话记忆
-│   └── conversation.py
-│
-├── cli/            # CLI 交互
-│   └── console.py
-│
-└── core/           # 配置与 LLM 客户端
-    ├── config.py
-    └── llm.py
+├── security/           # 权限系统
+├── memory/             # 对话记忆
+└── core/               # 配置 & LLM 客户端
 ```
 
 ---
 
-## 📚 学习路径
-
-通过这个项目，你将掌握：
-
-| 主题 | 内容 | 文件 |
-|------|------|------|
-| **Agent 循环** | 思考-行动-观察模式 | [agent/nodes.py](src/jojo_code/agent/nodes.py) |
-| **状态机设计** | LangGraph 图构建 | [agent/graph.py](src/jojo_code/agent/graph.py) |
-| **工具抽象** | 安全的工具定义与执行 | [tools/](src/jojo_code/tools/) |
-| **记忆管理** | Token 计数与压缩策略 | [memory/conversation.py](src/jojo_code/memory/conversation.py) |
-| **TDD 实践** | 测试驱动的开发流程 | [tests/](tests/) |
-
----
-
-## 🧪 开发
-
-### 运行测试
+## 📖 命令
 
 ```bash
-# 运行所有测试
-uv run pytest tests/ -v
+# TUI
+jojo-code                        # 启动终端界面
 
-# 带覆盖率报告
-uv run pytest tests/ -v --cov=src/jojo_code --cov-report=html
+# 服务管理
+jojo-code server start           # 前台启动服务
+jojo-code server start -d        # 后台守护模式
+jojo-code server status          # 查看服务状态
+jojo-code server stop            # 停止服务
+
+# 配置
+jojo-code config set server ws://localhost:8080/ws
+jojo-code config set model gpt-4o
+jojo-code config show
+jojo-code config get server
 ```
 
-### TDD 工作流
+---
 
-```mermaid
-flowchart LR
-    R["🔴 RED<br/>编写失败的测试"] --> G["🟢 GREEN<br/>编写最小实现"]
-    G --> F["🔵 REFACTOR<br/>优化代码"]
-    F --> R
+## 🐳 Docker
+
+```bash
+# 启动
+docker compose up -d
+
+# 验证
+curl http://localhost:8080/health
+
+# 远程连接
+jojo-code config set server ws://your-server:8080/ws
+jojo-code
 ```
+
+详见 [Docker 部署指南](docs/docker.md)
 
 ---
 
@@ -203,15 +156,30 @@ flowchart LR
 | Agent 框架 | LangGraph |
 | 工具定义 | LangChain Tools |
 | LLM 客户端 | langchain-openai / langchain-anthropic |
-| CLI | rich + prompt-toolkit |
+| CLI 框架 | Textual |
+| WebSocket | FastAPI + websockets |
 | 测试 | pytest + pytest-asyncio |
 | 包管理 | uv |
 
 ---
 
-## 🤝 贡献
+## 🧪 开发
 
-欢迎提交 Issue 和 Pull Request！
+```bash
+# 安装依赖
+uv sync
+
+# 运行测试
+uv run pytest tests/ -v
+
+# 代码检查
+uv run ruff check src/
+uv run ruff format --check src/
+```
+
+---
+
+## 🤝 贡献
 
 1. Fork 本仓库
 2. 创建特性分支 (`git checkout -b feature/amazing-feature`)
@@ -227,17 +195,7 @@ flowchart LR
 
 ---
 
-## 🙏 致谢
-
-- [Claude Code](https://claude.ai/code) - Anthropic 官方 CLI，本项目的灵感来源
-- [LangGraph](https://github.com/langchain-ai/langgraph) - 强大的 Agent 状态机框架
-- [LangChain](https://github.com/langchain-ai/langchain) - LLM 应用开发工具链
-
----
-
 <div align="center">
-
-**⭐ 如果这个项目对你有帮助，请给一个 Star！**
 
 Made with ❤️ for learning Agent architecture
 
