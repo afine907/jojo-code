@@ -5,6 +5,216 @@ from pathlib import Path
 
 from langchain_core.tools import tool
 
+# Python 标准库模块列表（完整版）
+STDLIB_MODULES = frozenset(
+    [
+        "abc",
+        "aifc",
+        "argparse",
+        "ast",
+        "asynchat",
+        "asyncio",
+        "asyncore",
+        "atexit",
+        "audioop",
+        "base64",
+        "bdb",
+        "binascii",
+        "binhex",
+        "bisect",
+        "builtins",
+        "bz2",
+        "calendar",
+        "cgi",
+        "cgitb",
+        "chunk",
+        "cmath",
+        "cmd",
+        "code",
+        "codecs",
+        "codeop",
+        "collections",
+        "colorsys",
+        "compileall",
+        "concurrent",
+        "configparser",
+        "contextlib",
+        "contextvars",
+        "copy",
+        "copyreg",
+        "cProfile",
+        "crypt",
+        "csv",
+        "ctypes",
+        "curses",
+        "dataclasses",
+        "datetime",
+        "dbm",
+        "decimal",
+        "difflib",
+        "dis",
+        "distutils",
+        "doctest",
+        "email",
+        "encodings",
+        "enum",
+        "errno",
+        "faulthandler",
+        "fcntl",
+        "filecmp",
+        "fileinput",
+        "fnmatch",
+        "fractions",
+        "ftplib",
+        "functools",
+        "gc",
+        "getopt",
+        "getpass",
+        "gettext",
+        "glob",
+        "grp",
+        "gzip",
+        "hashlib",
+        "heapq",
+        "hmac",
+        "html",
+        "http",
+        "idlelib",
+        "imaplib",
+        "imghdr",
+        "imp",
+        "importlib",
+        "inspect",
+        "io",
+        "ipaddress",
+        "itertools",
+        "json",
+        "keyword",
+        "lib2to3",
+        "linecache",
+        "locale",
+        "logging",
+        "lzma",
+        "mailbox",
+        "mailcap",
+        "marshal",
+        "math",
+        "mimetypes",
+        "mmap",
+        "modulefinder",
+        "multiprocessing",
+        "netrc",
+        "nis",
+        "nntplib",
+        "numbers",
+        "operator",
+        "optparse",
+        "os",
+        "ossaudiodev",
+        "pathlib",
+        "pdb",
+        "pickle",
+        "pickletools",
+        "pipes",
+        "pkgutil",
+        "platform",
+        "plistlib",
+        "poplib",
+        "posix",
+        "posixpath",
+        "pprint",
+        "profile",
+        "pstats",
+        "pty",
+        "pwd",
+        "py_compile",
+        "pyclbr",
+        "pydoc",
+        "queue",
+        "quopri",
+        "random",
+        "re",
+        "readline",
+        "reprlib",
+        "resource",
+        "rlcompleter",
+        "runpy",
+        "sched",
+        "secrets",
+        "select",
+        "selectors",
+        "shelve",
+        "shlex",
+        "shutil",
+        "signal",
+        "site",
+        "smtpd",
+        "smtplib",
+        "sndhdr",
+        "socket",
+        "socketserver",
+        "sqlite3",
+        "ssl",
+        "stat",
+        "statistics",
+        "string",
+        "stringprep",
+        "struct",
+        "subprocess",
+        "sunau",
+        "symtable",
+        "sys",
+        "sysconfig",
+        "syslog",
+        "tabnanny",
+        "tarfile",
+        "telnetlib",
+        "tempfile",
+        "termios",
+        "test",
+        "textwrap",
+        "threading",
+        "time",
+        "timeit",
+        "tkinter",
+        "token",
+        "tokenize",
+        "tomllib",
+        "trace",
+        "traceback",
+        "tracemalloc",
+        "tty",
+        "turtle",
+        "turtledemo",
+        "types",
+        "typing",
+        "unicodedata",
+        "unittest",
+        "urllib",
+        "uu",
+        "uuid",
+        "venv",
+        "warnings",
+        "wave",
+        "weakref",
+        "webbrowser",
+        "winreg",
+        "winsound",
+        "wsgiref",
+        "xdrlib",
+        "xml",
+        "xmlrpc",
+        "zipapp",
+        "zipfile",
+        "zipimport",
+        "zlib",
+        # 常见的内置模块
+        "_thread",
+        "_io",
+        "_collections_abc",
+    ]
+)
+
 
 @tool
 def analyze_python_file(path: str) -> str:
@@ -27,14 +237,12 @@ def analyze_python_file(path: str) -> str:
         content = file_path.read_text(encoding="utf-8")
         tree = ast.parse(content)
 
-        # 统计基本信息
+        # 单次遍历 AST 收集所有指标
         function_count = 0
         class_count = 0
         import_count = 0
-        line_count = len(content.splitlines())
-        comment_count = content.count("#")
+        comment_lines = 0
 
-        # 遍历 AST 统计
         for node in ast.walk(tree):
             if isinstance(node, ast.FunctionDef):
                 function_count += 1
@@ -42,6 +250,16 @@ def analyze_python_file(path: str) -> str:
                 class_count += 1
             elif isinstance(node, (ast.Import, ast.ImportFrom)):
                 import_count += 1
+
+        # 准确统计注释行（排除字符串中的 #）
+        lines = content.splitlines()
+        for line in lines:
+            stripped = line.strip()
+            # 纯注释行（以 # 开头，但不在字符串中）
+            if stripped.startswith("#"):
+                comment_lines += 1
+
+        line_count = len(lines)
 
         # 计算复杂度（简化版）
         complexity = _calculate_complexity(tree)
@@ -53,12 +271,12 @@ def analyze_python_file(path: str) -> str:
   函数数量: {function_count}
   类数量: {class_count}
   导入数量: {import_count}
-  注释行数: {comment_count}
+  注释行数: {comment_lines}
   估算复杂度: {complexity}
 
 代码质量指标:
   平均函数密度: {line_count / max(function_count, 1):.1f} 行/函数
-  注释比例: {comment_count / max(line_count, 1) * 100:.1f}%
+  注释比例: {comment_lines / max(line_count, 1) * 100:.1f}%
 """
 
         return result
@@ -143,25 +361,8 @@ def find_python_dependencies(path: str) -> str:
     if not dependencies:
         return f"在 {path} 中未找到依赖项"
 
-    # 过滤掉标准库模块（简化版）
-    stdlib_modules = {
-        "os",
-        "sys",
-        "pathlib",
-        "typing",
-        "ast",
-        "json",
-        "re",
-        "datetime",
-        "collections",
-        "itertools",
-        "functools",
-        "argparse",
-        "logging",
-    }
-
-    third_party_deps = sorted(dependencies - stdlib_modules)
-    stdlib_deps = sorted(dependencies & stdlib_modules)
+    third_party_deps = sorted(dependencies - STDLIB_MODULES)
+    stdlib_deps = sorted(dependencies & STDLIB_MODULES)
 
     result = f"依赖分析: {path}\n"
     result += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
@@ -181,7 +382,7 @@ def find_python_dependencies(path: str) -> str:
 
 @tool
 def check_code_style(path: str, rules: str = "basic") -> str:
-    """检查代码风格问题。
+    """检查代码风格问题（调用 ruff）。
 
     Args:
         path: Python 文件路径
@@ -190,6 +391,8 @@ def check_code_style(path: str, rules: str = "basic") -> str:
     Returns:
         代码风格检查结果
     """
+    import subprocess
+
     file_path = Path(path)
     if not file_path.exists():
         return f"错误: 文件不存在 {path}"
@@ -198,58 +401,60 @@ def check_code_style(path: str, rules: str = "basic") -> str:
         return f"错误: {path} 不是 Python 文件"
 
     try:
+        # 尝试使用 ruff 进行检查
+        cmd = ["ruff", "check", "--output-format=text"]
+        if rules == "strict":
+            cmd.append("--select=ALL")
+        cmd.append(str(file_path))
+
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+
+        if result.returncode == 0:
+            return f"✅ 代码风格检查通过: {path} (ruff)"
+
+        output = result.stdout.strip()
+        if output:
+            lines = output.split("\n")
+            if len(lines) > 15:
+                output = "\n".join(lines[:15]) + f"\n... (共 {len(lines)} 个问题)"
+            return f"代码风格问题 (ruff):\n{output}"
+
+        return f"代码风格检查通过: {path} (ruff)"
+
+    except FileNotFoundError:
+        # ruff 不可用，回退到基本检查
+        return _check_code_style_basic(file_path, rules)
+    except subprocess.TimeoutExpired:
+        return "错误: 代码风格检查超时"
+    except Exception as e:
+        return f"检查失败: {e}"
+
+
+def _check_code_style_basic(file_path: Path, rules: str = "basic") -> str:
+    """基本的代码风格检查（ruff 不可用时的后备方案）。"""
+    try:
         content = file_path.read_text(encoding="utf-8")
         lines = content.splitlines()
         issues = []
 
-        # 基本检查规则
         for i, line in enumerate(lines, 1):
-            # 检查行长度
-            if len(line) > 100:
-                issues.append(f"第 {i} 行: 行长度超过 100 字符 ({len(line)})")
-
-            # 检查尾随空格
+            if len(line) > 120:
+                issues.append(f"第 {i} 行: 行长度超过 120 字符 ({len(line)})")
             if line.rstrip() != line:
                 issues.append(f"第 {i} 行: 存在尾随空格")
-
-            # 检查制表符
             if "\t" in line:
                 issues.append(f"第 {i} 行: 使用制表符而不是空格")
 
-        # 严格模式额外检查
-        if rules == "strict":
-            for i, line in enumerate(lines, 1):
-                # 检查单行过长函数定义
-                if line.strip().startswith("def ") and len(line) > 80:
-                    issues.append(f"第 {i} 行: 函数定义过长")
-
-                # 检查缺少空格的运算符
-                operators = ["=", "==", "!=", "<", ">", "<=", ">=", "+", "-", "*", "/"]
-                for op in operators:
-                    if (
-                        f"{op}" in line
-                        and f" {op} " not in line
-                        and op + " " not in line
-                        and " " + op not in line
-                    ):
-                        if not line.strip().startswith("def ") and not line.strip().startswith(
-                            "class "
-                        ):
-                            issues.append(f"第 {i} 行: 运算符 '{op}' 周围可能缺少空格")
-
-        # 检查文件末尾是否有空行
         if lines and lines[-1].strip() != "":
             issues.append("文件末尾缺少空行")
 
         if not issues:
-            return f"代码风格检查通过: {path} (规则: {rules})"
+            return f"代码风格检查通过: {file_path} (基本规则)"
 
         result = f"代码风格问题 ({len(issues)} 个):\n"
-        result += "\n".join(issues[:10])  # 最多显示前 10 个问题
-
+        result += "\n".join(issues[:10])
         if len(issues) > 10:
             result += f"\n... 还有 {len(issues) - 10} 个问题"
-
         return result
 
     except Exception as e:
@@ -278,37 +483,29 @@ def suggest_refactoring(path: str) -> str:
         tree = ast.parse(content)
         suggestions = []
 
-        # 分析函数长度（使用 AST 节点数量作为代理）
+        # 单次遍历 AST 收集所有信息
+        string_constants: dict[str, int] = {}
+
         for node in ast.walk(tree):
             if isinstance(node, ast.FunctionDef):
-                # 使用 AST 节点数量作为函数复杂度的代理
                 func_complexity = len(list(ast.walk(node)))
                 if func_complexity > 30:
                     suggestions.append(
                         f"函数 '{node.name}' 可能过长 (复杂度: {func_complexity})，"
                         "考虑拆分为更小的函数"
                     )
-
-                # 检查参数数量
                 if len(node.args.args) > 5:
                     suggestions.append(
                         f"函数 '{node.name}' 参数过多 ({len(node.args.args)} 个)，考虑使用参数对象"
                     )
-
-        # 分析类
-        for node in ast.walk(tree):
-            if isinstance(node, ast.ClassDef):
+            elif isinstance(node, ast.ClassDef):
                 methods = [n for n in ast.walk(node) if isinstance(n, ast.FunctionDef)]
                 if len(methods) > 10:
                     suggestions.append(
                         f"类 '{node.name}' 方法过多 ({len(methods)} 个)，考虑职责分离"
                     )
-
-        # 检查重复的字符串常量
-        string_constants = {}
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Constant) and isinstance(node.value, str):
-                if len(node.value) > 10:  # 只检查较长的字符串
+            elif isinstance(node, ast.Constant) and isinstance(node.value, str):
+                if len(node.value) > 10:
                     string_constants[node.value] = string_constants.get(node.value, 0) + 1
 
         for const, count in string_constants.items():
@@ -321,7 +518,7 @@ def suggest_refactoring(path: str) -> str:
             return f"重构建议: {path}\n代码结构良好，暂无明显重构需求"
 
         result = f"重构建议 ({len(suggestions)} 项):\n"
-        result += "\n".join([f"• {sugg}" for sugg in suggestions[:5]])  # 最多显示前 5 个建议
+        result += "\n".join([f"• {sugg}" for sugg in suggestions[:5]])
 
         if len(suggestions) > 5:
             result += f"\n... 还有 {len(suggestions) - 5} 个建议"

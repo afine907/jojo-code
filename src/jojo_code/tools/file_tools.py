@@ -7,6 +7,9 @@ from langchain_core.tools import tool
 # 从 search_tools 导入需要的函数
 from jojo_code.tools.search_tools import glob_search
 
+# 文件大小限制（10MB）
+MAX_FILE_SIZE = 10 * 1024 * 1024
+
 
 @tool
 def read_file(path: str, line_numbers: bool = False) -> str:
@@ -21,10 +24,20 @@ def read_file(path: str, line_numbers: bool = False) -> str:
 
     Raises:
         FileNotFoundError: 文件不存在
+        ValueError: 文件过大
     """
     file_path = Path(path)
     if not file_path.exists():
         raise FileNotFoundError(f"文件不存在: {path}")
+
+    # 检查文件大小
+    file_size = file_path.stat().st_size
+    if file_size > MAX_FILE_SIZE:
+        size_mb = file_size / 1024 / 1024
+        limit_mb = MAX_FILE_SIZE / 1024 / 1024
+        raise ValueError(
+            f"文件过大 ({size_mb:.1f}MB)，超过 {limit_mb:.0f}MB 限制。请使用 head/tail 或分页读取。"
+        )
 
     content = file_path.read_text(encoding="utf-8")
 

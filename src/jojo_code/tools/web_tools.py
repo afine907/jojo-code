@@ -5,8 +5,12 @@
 
 from __future__ import annotations
 
+import logging
+
 from duckduckgo_search import DDGS
 from langchain_core.tools import tool
+
+logger = logging.getLogger(__name__)
 
 
 @tool
@@ -25,9 +29,9 @@ def web_search(query: str, count: int = 5) -> str:
     try:
         with DDGS() as ddgs:
             results = list(ddgs.text(query, max_results=count))
-    except Exception:
-        # 兜底：任何异常都不阻塞工具的调用，返回空字符串
-        return ""
+    except Exception as e:
+        logger.warning("Web search failed for query '%s': %s", query, e)
+        return f"搜索失败: {e}"
 
     if not results:
         return ""
