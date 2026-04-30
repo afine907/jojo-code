@@ -66,6 +66,7 @@ def _handle_server(args):
         print("启动 WebSocket 服务...")
         try:
             import uvicorn
+
             from jojo_code.server.ws_server import app
 
             uvicorn.run(app, host="0.0.0.0", port=8080)
