@@ -181,13 +181,13 @@ async def _stream_chat(agent, state: dict, ws: WebSocket, req_id: str | int | No
         def _run_stream():
             try:
                 for event in agent.stream(state):
-                    # 将 event 放入队列
-                    asyncio.run_coroutine_threadsafe(queue.put(event), loop)
+                    # 将 event 放入队列（同步方式）
+                    loop.call_soon_threadsafe(queue.put_nowait, event)
 
                 # 标记完成
-                asyncio.run_coroutine_threadsafe(queue.put(None), loop)
+                loop.call_soon_threadsafe(queue.put_nowait, None)
             except Exception as e:
-                asyncio.run_coroutine_threadsafe(queue.put(e), loop)
+                loop.call_soon_threadsafe(queue.put_nowait, e)
 
         # 在线程池中启动流式处理
         loop.run_in_executor(None, _run_stream)
