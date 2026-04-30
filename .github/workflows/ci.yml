@@ -42,7 +42,10 @@ jobs:
         run: uv run mypy src/
 
       - name: 🧪 Run Python test suite with coverage
-        run: uv run pytest tests/ -v --cov=src/jojo_code --cov-report=xml -m "not e2e or longcat"
+        run: uv run pytest tests/ -v --cov=src/jojo_code --cov-report=xml -m "not longcat"
+
+      - name: 🚀 Run E2E tests
+        run: uv run pytest tests/test_e2e/test_ws_e2e.py -v
 
       - name: 📊 Upload coverage report to Codecov
         uses: codecov/codecov-action@v4
