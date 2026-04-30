@@ -4,14 +4,12 @@
 不需要 API Key，只测试通信层。
 """
 
-import asyncio
 import json
 import subprocess
 import time
 
 import pytest
 import websockets
-
 
 # 服务端口（避免冲突）
 TEST_PORT = 18765
@@ -75,7 +73,7 @@ class TestWebSocketProtocol:
     @pytest.mark.asyncio
     async def test_connect_and_disconnect(self, server_url):
         """连接和断开"""
-        async with websockets.connect(server_url) as ws:
+        async with websockets.connect(server_url):
             # 连接成功即断开
             pass
 
@@ -92,9 +90,7 @@ class TestWebSocketProtocol:
     async def test_method_not_found(self, server_url):
         """未知方法处理"""
         async with websockets.connect(server_url) as ws:
-            await ws.send(json.dumps({
-                "jsonrpc": "2.0", "id": 1, "method": "nonexistent"
-            }))
+            await ws.send(json.dumps({"jsonrpc": "2.0", "id": 1, "method": "nonexistent"}))
             resp = json.loads(await ws.recv())
             assert "error" in resp
             assert resp["error"]["code"] == -32601
@@ -103,9 +99,7 @@ class TestWebSocketProtocol:
     async def test_get_model(self, server_url):
         """获取模型"""
         async with websockets.connect(server_url) as ws:
-            await ws.send(json.dumps({
-                "jsonrpc": "2.0", "id": 1, "method": "get_model"
-            }))
+            await ws.send(json.dumps({"jsonrpc": "2.0", "id": 1, "method": "get_model"}))
             resp = json.loads(await ws.recv())
             assert "result" in resp
             assert "model" in resp["result"]
@@ -114,9 +108,7 @@ class TestWebSocketProtocol:
     async def test_get_stats(self, server_url):
         """获取统计"""
         async with websockets.connect(server_url) as ws:
-            await ws.send(json.dumps({
-                "jsonrpc": "2.0", "id": 1, "method": "get_stats"
-            }))
+            await ws.send(json.dumps({"jsonrpc": "2.0", "id": 1, "method": "get_stats"}))
             resp = json.loads(await ws.recv())
             assert "result" in resp
             assert "messages" in resp["result"]
@@ -125,9 +117,7 @@ class TestWebSocketProtocol:
     async def test_clear(self, server_url):
         """清空对话"""
         async with websockets.connect(server_url) as ws:
-            await ws.send(json.dumps({
-                "jsonrpc": "2.0", "id": 1, "method": "clear"
-            }))
+            await ws.send(json.dumps({"jsonrpc": "2.0", "id": 1, "method": "clear"}))
             resp = json.loads(await ws.recv())
             assert resp["result"]["status"] == "ok"
 
@@ -135,9 +125,7 @@ class TestWebSocketProtocol:
     async def test_permission_mode(self, server_url):
         """权限模式"""
         async with websockets.connect(server_url) as ws:
-            await ws.send(json.dumps({
-                "jsonrpc": "2.0", "id": 1, "method": "permission/mode"
-            }))
+            await ws.send(json.dumps({"jsonrpc": "2.0", "id": 1, "method": "permission/mode"}))
             resp = json.loads(await ws.recv())
             assert "result" in resp
 
@@ -145,10 +133,11 @@ class TestWebSocketProtocol:
     async def test_audit_recent(self, server_url):
         """审计日志"""
         async with websockets.connect(server_url) as ws:
-            await ws.send(json.dumps({
-                "jsonrpc": "2.0", "id": 1, "method": "audit/recent",
-                "params": {"limit": 3}
-            }))
+            await ws.send(
+                json.dumps(
+                    {"jsonrpc": "2.0", "id": 1, "method": "audit/recent", "params": {"limit": 3}}
+                )
+            )
             resp = json.loads(await ws.recv())
             assert resp["result"]["status"] == "ok"
 
@@ -158,9 +147,7 @@ class TestWebSocketProtocol:
         async with websockets.connect(server_url) as ws:
             # 发送多个请求
             for i in range(5):
-                await ws.send(json.dumps({
-                    "jsonrpc": "2.0", "id": i, "method": "get_model"
-                }))
+                await ws.send(json.dumps({"jsonrpc": "2.0", "id": i, "method": "get_model"}))
 
             # 接收所有响应
             responses = []
