@@ -32,7 +32,7 @@ class TestWebSocketProtocol:
     """WebSocket 协议测试"""
 
     def test_connect_and_disconnect(self, client):
-        with client.websocket_connect("/ws") as ws:
+        with client.websocket_connect("/ws"):
             # 连接成功即断开
             pass
 
