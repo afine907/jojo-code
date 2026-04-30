@@ -1,7 +1,7 @@
 [project]
 name = "jojo-code"
 version = "0.1.0"
-description = "A coding agent powered by jojo AI - TypeScript CLI + Python LangGraph Core"
+description = "A coding agent powered by jojo AI - Python CLI + LangGraph Core"
 readme = "README.md"
 license = "MIT"
 authors = [
@@ -38,7 +38,15 @@ dependencies = [
     "tiktoken>=0.5",
     "python-dotenv>=1",
     "duckduckgo-search>=0.8.0",
+    # CLI & Server
+    "textual>=0.40",
+    "fastapi>=0.100",
+    "uvicorn>=0.23",
+    "websockets>=12.0",
 ]
+
+[project.scripts]
+jojo-code = "jojo_code.cli.main:main"
 
 [project.optional-dependencies]
 dev = [
