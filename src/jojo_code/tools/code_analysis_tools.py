@@ -1,11 +1,14 @@
-"""代码分析工具 - 静态分析、复杂度评估、依赖检查"""
+"""代码分析工具 - 基于 radon 的静态分析、复杂度评估、依赖检查"""
 
 import ast
 from pathlib import Path
 
 from langchain_core.tools import tool
+from radon.complexity import cc_rank, cc_visit
+from radon.metrics import mi_rank, mi_visit
+from radon.raw import analyze as radon_analyze
 
-# Python 标准库模块列表（完整版）
+# Python 标准库模块列表
 STDLIB_MODULES = frozenset(
     [
         "abc",
@@ -84,7 +87,7 @@ STDLIB_MODULES = frozenset(
         "imghdr",
         "imp",
         "importlib",
-        "inspect",
+        "intelidinspector",
         "io",
         "ipaddress",
         "itertools",
@@ -208,7 +211,6 @@ STDLIB_MODULES = frozenset(
         "zipfile",
         "zipimport",
         "zlib",
-        # 常见的内置模块
         "_thread",
         "_io",
         "_collections_abc",
@@ -218,13 +220,13 @@ STDLIB_MODULES = frozenset(
 
 @tool
 def analyze_python_file(path: str) -> str:
-    """分析 Python 文件的复杂度、函数数量、类数量等指标。
+    """分析 Python 文件的复杂度、函数数量、类数量等指标（基于 radon）。
 
     Args:
         path: Python 文件路径
 
     Returns:
-        代码分析结果，包含函数数量、类数量、复杂度等信息
+        代码分析结果
     """
     file_path = Path(path)
     if not file_path.exists():
@@ -234,50 +236,47 @@ def analyze_python_file(path: str) -> str:
         return f"错误: {path} 不是 Python 文件"
 
     try:
-        content = file_path.read_text(encoding="utf-8")
-        tree = ast.parse(content)
+        code = file_path.read_text(encoding="utf-8")
 
-        # 单次遍历 AST 收集所有指标
-        function_count = 0
-        class_count = 0
-        import_count = 0
-        comment_lines = 0
+        # radon 原始指标
+        raw = radon_analyze(code)
 
-        for node in ast.walk(tree):
-            if isinstance(node, ast.FunctionDef):
-                function_count += 1
-            elif isinstance(node, ast.ClassDef):
-                class_count += 1
-            elif isinstance(node, (ast.Import, ast.ImportFrom)):
-                import_count += 1
+        # radon 圈复杂度
+        blocks = cc_visit(code)
 
-        # 准确统计注释行（排除字符串中的 #）
-        lines = content.splitlines()
-        for line in lines:
-            stripped = line.strip()
-            # 纯注释行（以 # 开头，但不在字符串中）
-            if stripped.startswith("#"):
-                comment_lines += 1
-
-        line_count = len(lines)
-
-        # 计算复杂度（简化版）
-        complexity = _calculate_complexity(tree)
+        # radon 可维护性指数
+        mi = mi_visit(code, True)
+        mi_grade = mi_rank(mi)
 
         result = f"""文件分析结果: {path}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 基本信息:
-  行数: {line_count}
-  函数数量: {function_count}
-  类数量: {class_count}
-  导入数量: {import_count}
-  注释行数: {comment_lines}
-  估算复杂度: {complexity}
+  总行数: {raw.loc}
+  代码行: {raw.lloc}
+  逻辑行: {raw.sloc}
+  注释行: {raw.comments}
+  空行: {raw.blank}
 
-代码质量指标:
-  平均函数密度: {line_count / max(function_count, 1):.1f} 行/函数
-  注释比例: {comment_lines / max(line_count, 1) * 100:.1f}%
+复杂度分析 (圈复杂度):
+  函数/类数量: {len(blocks)}
+  平均复杂度: {sum(b.complexity for b in blocks) / max(len(blocks), 1):.1f}
 """
+
+        # 显示各函数复杂度
+        if blocks:
+            result += "\n  函数详情:\n"
+            for b in sorted(blocks, key=lambda x: x.complexity, reverse=True)[:10]:
+                rank = cc_rank(b.complexity)
+                result += f"    {b.name}: 复杂度={b.complexity} ({rank}级)\n"
+
+        # 可维护性指数
+        result += f"\n可维护性指数: {mi:.1f}/100 ({mi_grade}级)"
+        if mi >= 85:
+            result += " ✅ 优秀"
+        elif mi >= 65:
+            result += " ⚠️ 一般"
+        else:
+            result += " ❌ 需要重构"
 
         return result
 
@@ -285,22 +284,6 @@ def analyze_python_file(path: str) -> str:
         return f"语法错误: {e}"
     except Exception as e:
         return f"分析失败: {e}"
-
-
-def _calculate_complexity(tree: ast.AST) -> int:
-    """计算代码复杂度（简化版圈复杂度）"""
-    complexity = 1  # 基础复杂度
-
-    for node in ast.walk(tree):
-        # 增加控制流语句的复杂度
-        if isinstance(node, (ast.If, ast.While, ast.For, ast.Try, ast.With)):
-            complexity += 1
-        elif isinstance(node, ast.ExceptHandler):
-            complexity += 1
-        elif isinstance(node, ast.BoolOp):
-            complexity += len(node.values) - 1
-
-    return complexity
 
 
 @tool
@@ -321,7 +304,6 @@ def find_python_dependencies(path: str) -> str:
     dependencies = set()
 
     if target_path.is_file() and target_path.suffix == ".py":
-        # 分析单个文件
         try:
             content = target_path.read_text(encoding="utf-8")
             tree = ast.parse(content)
@@ -333,12 +315,10 @@ def find_python_dependencies(path: str) -> str:
                 elif isinstance(node, ast.ImportFrom):
                     if node.module:
                         dependencies.add(node.module.split(".")[0])
-
         except Exception as e:
             return f"分析失败: {e}"
 
     elif target_path.is_dir():
-        # 分析目录下的所有 Python 文件
         for py_file in target_path.rglob("*.py"):
             try:
                 content = py_file.read_text(encoding="utf-8")
@@ -351,10 +331,8 @@ def find_python_dependencies(path: str) -> str:
                     elif isinstance(node, ast.ImportFrom):
                         if node.module:
                             dependencies.add(node.module.split(".")[0])
-
             except Exception:
-                continue  # 跳过无法解析的文件
-
+                continue
     else:
         return f"错误: {path} 不是有效的 Python 文件或目录"
 
@@ -401,7 +379,6 @@ def check_code_style(path: str, rules: str = "basic") -> str:
         return f"错误: {path} 不是 Python 文件"
 
     try:
-        # 尝试使用 ruff 进行检查
         cmd = ["ruff", "check", "--output-format=text"]
         if rules == "strict":
             cmd.append("--select=ALL")
@@ -422,7 +399,6 @@ def check_code_style(path: str, rules: str = "basic") -> str:
         return f"代码风格检查通过: {path} (ruff)"
 
     except FileNotFoundError:
-        # ruff 不可用，回退到基本检查
         return _check_code_style_basic(file_path, rules)
     except subprocess.TimeoutExpired:
         return "错误: 代码风格检查超时"
@@ -463,7 +439,7 @@ def _check_code_style_basic(file_path: Path, rules: str = "basic") -> str:
 
 @tool
 def suggest_refactoring(path: str) -> str:
-    """分析代码并提供重构建议。
+    """分析代码并提供重构建议（基于 radon 复杂度指标）。
 
     Args:
         path: Python 文件路径
@@ -479,32 +455,46 @@ def suggest_refactoring(path: str) -> str:
         return f"错误: {path} 不是 Python 文件"
 
     try:
-        content = file_path.read_text(encoding="utf-8")
-        tree = ast.parse(content)
+        code = file_path.read_text(encoding="utf-8")
+        tree = ast.parse(code)
         suggestions = []
 
-        # 单次遍历 AST 收集所有信息
-        string_constants: dict[str, int] = {}
+        # 使用 radon 获取复杂度数据
+        blocks = cc_visit(code)
 
+        # 高复杂度函数
+        for block in blocks:
+            if block.complexity >= 10:
+                suggestions.append(
+                    f"{block.name}: 复杂度={block.complexity} ({cc_rank(block.complexity)}级),"
+                    "建议拆分为更小的函数"
+                )
+
+        # 可维护性指数低
+        mi = mi_visit(code, True)
+        if mi < 65:
+            suggestions.append(f"文件可维护性指数 {mi:.1f}/100 ({mi_rank(mi)}级)，建议重构")
+
+        # AST 分析：函数参数过多
         for node in ast.walk(tree):
-            if isinstance(node, ast.FunctionDef):
-                func_complexity = len(list(ast.walk(node)))
-                if func_complexity > 30:
-                    suggestions.append(
-                        f"函数 '{node.name}' 可能过长 (复杂度: {func_complexity})，"
-                        "考虑拆分为更小的函数"
-                    )
-                if len(node.args.args) > 5:
-                    suggestions.append(
-                        f"函数 '{node.name}' 参数过多 ({len(node.args.args)} 个)，考虑使用参数对象"
-                    )
-            elif isinstance(node, ast.ClassDef):
+            if isinstance(node, ast.FunctionDef) and len(node.args.args) > 5:
+                suggestions.append(
+                    f"函数 '{node.name}' 参数过多 ({len(node.args.args)} 个)，考虑使用参数对象"
+                )
+
+        # AST 分析：类方法过多
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ClassDef):
                 methods = [n for n in ast.walk(node) if isinstance(n, ast.FunctionDef)]
                 if len(methods) > 10:
                     suggestions.append(
                         f"类 '{node.name}' 方法过多 ({len(methods)} 个)，考虑职责分离"
                     )
-            elif isinstance(node, ast.Constant) and isinstance(node.value, str):
+
+        # AST 分析：重复字符串常量
+        string_constants: dict[str, int] = {}
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Constant) and isinstance(node.value, str):
                 if len(node.value) > 10:
                     string_constants[node.value] = string_constants.get(node.value, 0) + 1
 

@@ -1,38 +1,25 @@
-"""Git 集成工具 - 基本的 Git 操作支持"""
+"""Git 集成工具 - 基于 GitPython 的 Git 操作支持"""
 
-import subprocess
-
+from git import InvalidGitRepositoryError, Repo
 from langchain_core.tools import tool
 
 
-def _run_git(args: list[str], path: str = ".", timeout: int = 10) -> tuple[bool, str]:
-    """执行 git 命令的通用辅助函数。
+def _get_repo(path: str = ".") -> tuple[Repo | None, str | None]:
+    """获取 Git 仓库实例。
 
     Args:
-        args: git 命令参数列表
         path: 仓库路径
-        timeout: 超时时间
 
     Returns:
-        (成功, 输出) 元组
+        (Repo 实例, 错误信息) 元组
     """
     try:
-        result = subprocess.run(
-            ["git", *args],
-            cwd=path,
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-        )
-        if result.returncode != 0:
-            return False, result.stderr.strip()
-        return True, result.stdout.strip()
-    except subprocess.TimeoutExpired:
-        return False, "错误: Git 命令执行超时"
-    except FileNotFoundError:
-        return False, "错误: Git 未安装或不在 PATH 中"
+        repo = Repo(path, search_parent_directories=True)
+        return repo, None
+    except InvalidGitRepositoryError:
+        return None, "错误: 当前目录不是 Git 仓库"
     except Exception as e:
-        return False, f"错误: {e}"
+        return None, f"错误: {e}"
 
 
 @tool
@@ -45,49 +32,49 @@ def git_status(path: str = ".") -> str:
     Returns:
         Git 状态信息
     """
-    ok, output = _run_git(["status", "--porcelain"], path)
-    if not ok:
-        return f"Git 错误: {output}"
+    repo, error = _get_repo(path)
+    if error:
+        return error
 
-    if not output:
-        return "工作区干净，没有修改"
+    try:
+        # 获取工作区变更
+        changed_files = repo.index.diff(None)
+        staged_files = repo.index.diff("HEAD")
+        untracked_files = repo.untracked_files
 
-    # 解析状态输出
-    lines = output.split("\n")
-    staged = []
-    unstaged = []
-    untracked = []
+        staged = []
+        unstaged = []
+        untracked = list(untracked_files) if untracked_files else []
 
-    for line in lines:
-        if not line.strip():
-            continue
+        for item in staged_files:
+            staged.append(f"{item.change_type} {item.a_path}")
 
-        status_code = line[:2]
-        filename = line[3:]
+        for item in changed_files:
+            if item.a_path not in [s.split(" ")[1] for s in staged]:
+                unstaged.append(f"{item.change_type} {item.a_path}")
 
-        if status_code.startswith("??"):
-            untracked.append(filename)
-        elif status_code[0] in "MADRC":
-            staged.append(f"{status_code} {filename}")
-        elif status_code[1] in "MADRC":
-            unstaged.append(f"{status_code} {filename}")
+        if not staged and not unstaged and not untracked:
+            return "工作区干净，没有修改"
 
-    result = "Git 状态:\n"
-    result += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        result = "Git 状态:\n"
+        result += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
 
-    if staged:
-        result += f"暂存区 ({len(staged)} 个文件):\n"
-        result += "\n".join([f"  {item}" for item in staged]) + "\n"
+        if staged:
+            result += f"暂存区 ({len(staged)} 个文件):\n"
+            result += "\n".join([f"  {item}" for item in staged]) + "\n"
 
-    if unstaged:
-        result += f"未暂存 ({len(unstaged)} 个文件):\n"
-        result += "\n".join([f"  {item}" for item in unstaged]) + "\n"
+        if unstaged:
+            result += f"未暂存 ({len(unstaged)} 个文件):\n"
+            result += "\n".join([f"  {item}" for item in unstaged]) + "\n"
 
-    if untracked:
-        result += f"未跟踪 ({len(untracked)} 个文件):\n"
-        result += "\n".join([f"  {item}" for item in untracked]) + "\n"
+        if untracked:
+            result += f"未跟踪 ({len(untracked)} 个文件):\n"
+            result += "\n".join([f"  {item}" for item in untracked[:20]]) + "\n"
 
-    return result
+        return result
+
+    except Exception as e:
+        return f"错误: {e}"
 
 
 @tool
@@ -101,24 +88,29 @@ def git_diff(path: str = ".", file_path: str | None = None) -> str:
     Returns:
         Git 差异信息
     """
-    args = ["diff"]
-    if file_path:
-        args.append(file_path)
+    repo, error = _get_repo(path)
+    if error:
+        return error
 
-    ok, output = _run_git(args, path)
-    if not ok:
-        return f"Git 错误: {output}"
+    try:
+        if file_path:
+            diff_output = repo.git.diff(file_path)
+        else:
+            diff_output = repo.git.diff()
 
-    if not output:
-        target = file_path or "工作区"
-        return f"没有检测到 {target} 的差异"
+        if not diff_output:
+            target = file_path or "工作区"
+            return f"没有检测到 {target} 的差异"
 
-    # 限制输出长度，避免过长
-    lines = output.split("\n")
-    if len(lines) > 50:
-        output = "\n".join(lines[:50]) + f"\n... (还有 {len(lines) - 50} 行)\n"
+        # 限制输出长度
+        lines = diff_output.split("\n")
+        if len(lines) > 50:
+            diff_output = "\n".join(lines[:50]) + f"\n... (还有 {len(lines) - 50} 行)\n"
 
-    return output
+        return diff_output
+
+    except Exception as e:
+        return f"错误: {e}"
 
 
 @tool
@@ -132,14 +124,30 @@ def git_log(path: str = ".", limit: int = 10) -> str:
     Returns:
         Git 提交历史
     """
-    ok, output = _run_git(["log", f"-{limit}", "--oneline", "--graph"], path)
-    if not ok:
-        return f"Git 错误: {output}"
+    repo, error = _get_repo(path)
+    if error:
+        return error
 
-    if not output:
-        return "没有提交历史"
+    try:
+        commits = list(repo.iter_commits(max_count=limit))
 
-    return f"最近 {limit} 条提交:\n{output}"
+        if not commits:
+            return "没有提交历史"
+
+        result = f"最近 {len(commits)} 条提交:\n"
+        result += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+
+        for commit in commits:
+            sha = commit.hexsha[:7]
+            author = commit.author.name
+            date = commit.committed_datetime.strftime("%Y-%m-%d %H:%M")
+            message = commit.summary
+            result += f"  {sha} {author} {date} {message}\n"
+
+        return result
+
+    except Exception as e:
+        return f"错误: {e}"
 
 
 @tool
@@ -153,38 +161,39 @@ def git_blame(file_path: str, path: str = ".") -> str:
     Returns:
         Git blame 信息
     """
-    ok, output = _run_git(["blame", "--line-porcelain", file_path], path)
-    if not ok:
-        return f"Git 错误: {output}"
+    repo, error = _get_repo(path)
+    if error:
+        return error
 
-    if not output:
-        return f"无法获取 {file_path} 的 blame 信息"
+    try:
+        # 获取 blame 信息
+        blame = repo.blame("HEAD", file_path)
 
-    # 解析 porcelain 格式，提取关键信息
-    lines = output.split("\n")
-    authors = {}
-    total_code_lines = 0
+        authors = {}
+        total_lines = 0
 
-    for line in lines:
-        if line.startswith("author "):
-            author = line[7:]
-            authors[author] = authors.get(author, 0) + 1
-        elif line.startswith("lineno "):
-            total_code_lines += 1  # 每个 lineno 行代表一行真实代码
+        for commit, lines in blame:
+            author = commit.author.name
+            line_count = len(lines)
+            authors[author] = authors.get(author, 0) + line_count
+            total_lines += line_count
 
-    result = f"Git Blame 分析: {file_path}\n"
-    result += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        result = f"Git Blame 分析: {file_path}\n"
+        result += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
 
-    if authors:
-        result += "主要作者:\n"
-        sorted_authors = sorted(authors.items(), key=lambda x: x[1], reverse=True)
-        for author, count in sorted_authors[:5]:
-            pct = count / max(total_code_lines, 1) * 100
-            result += f"  {author}: {count} 行 ({pct:.0f}%)\n"
+        if authors:
+            result += "主要作者:\n"
+            sorted_authors = sorted(authors.items(), key=lambda x: x[1], reverse=True)
+            for author, count in sorted_authors[:5]:
+                pct = count / max(total_lines, 1) * 100
+                result += f"  {author}: {count} 行 ({pct:.0f}%)\n"
 
-    result += f"\n总行数: {total_code_lines}"
+        result += f"\n总行数: {total_lines}"
 
-    return result
+        return result
+
+    except Exception as e:
+        return f"错误: {e}"
 
 
 @tool
@@ -197,42 +206,31 @@ def git_branch(path: str = ".") -> str:
     Returns:
         Git 分支信息
     """
-    # 一次性获取分支和远程分支信息
-    ok, output = _run_git(["branch", "-a", "--list"], path)
-    if not ok:
-        return f"Git 错误: {output}"
+    repo, error = _get_repo(path)
+    if error:
+        return error
 
-    if not output:
-        return "没有找到分支"
+    try:
+        current = (
+            repo.active_branch.name if not repo.head.is_detached else repo.head.commit.hexsha[:7]
+        )
+        branches = [b.name for b in repo.branches]
+        remote_branches = [r.name for r in repo.remotes[0].refs] if repo.remotes else []
 
-    branches = output.split("\n")
-    current_branch = None
-    local_branches = []
-    remote_branches = []
+        result = "Git 分支:\n"
+        result += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        result += f"当前分支: {current}\n\n"
+        result += "所有分支:\n"
+        result += "\n".join([f"  {'*' if b == current else ' '} {b}" for b in branches])
 
-    for branch in branches:
-        branch = branch.strip()
-        if not branch:
-            continue
-        if branch.startswith("* "):
-            current_branch = branch[2:]
-            local_branches.append(f"*{current_branch}")
-        elif branch.startswith("remotes/"):
-            remote_branches.append(branch)
-        else:
-            local_branches.append(branch)
+        if remote_branches:
+            result += f"\n\n远程分支 ({len(remote_branches)}):\n"
+            result += "\n".join([f"  {b}" for b in remote_branches[:10]])
 
-    result = "Git 分支:\n"
-    result += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-    result += f"当前分支: {current_branch or '未知'}\n\n"
-    result += "所有分支:\n"
-    result += "\n".join([f"  {branch}" for branch in local_branches])
+        return result
 
-    if remote_branches:
-        result += f"\n\n远程分支 ({len(remote_branches)}):\n"
-        result += "\n".join([f"  {branch}" for branch in remote_branches[:10]])
-
-    return result
+    except Exception as e:
+        return f"错误: {e}"
 
 
 @tool
@@ -245,46 +243,35 @@ def git_info(path: str = ".") -> str:
     Returns:
         Git 仓库信息
     """
-    # 先检查是否在 Git 仓库中
-    ok, output = _run_git(["rev-parse", "--git-dir"], path)
-    if not ok:
-        return "错误: 当前目录不是 Git 仓库"
+    repo, error = _get_repo(path)
+    if error:
+        return error
 
-    info = "Git 仓库信息:\n"
-    info += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+    try:
+        info = "Git 仓库信息:\n"
+        info += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
 
-    # 一次性获取所有信息（减少 subprocess 调用）
-    ok, multi_output = _run_git(
-        ["log", "-1", "--format=remote:%D%ncommit:%H%nauthor:%an%ndate:%ar%nmessage:%s"],
-        path,
-    )
-    if ok and multi_output:
-        for line in multi_output.split("\n"):
-            if line.startswith("remote:"):
-                info += f"分支/标签: {line[7:]}\n"
-            elif line.startswith("commit:"):
-                info += f"最新提交: {line[7:14]}\n"
-            elif line.startswith("author:"):
-                info += f"作者: {line[7:]}\n"
-            elif line.startswith("date:"):
-                info += f"时间: {line[5:]}\n"
-            elif line.startswith("message:"):
-                info += f"信息: {line[8:]}\n"
+        # 当前 HEAD 信息
+        head = repo.head.commit
+        info += f"最新提交: {head.hexsha[:7]}\n"
+        info += f"作者: {head.author.name}\n"
+        info += f"时间: {head.committed_datetime.strftime('%Y-%m-%d %H:%M')}\n"
+        info += f"信息: {head.summary}\n"
 
-    # 获取远程仓库
-    ok, remote_output = _run_git(["remote", "-v"], path)
-    if ok and remote_output:
-        remotes = remote_output.split("\n")
-        info += "\n远程仓库:\n"
-        for remote in remotes[:3]:
-            info += f"  {remote}\n"
+        # 远程仓库
+        if repo.remotes:
+            info += "\n远程仓库:\n"
+            for remote in repo.remotes[:3]:
+                info += f"  {remote.name}: {remote.url}\n"
 
-    # 获取提交统计（单次调用）
-    ok, count_output = _run_git(["rev-list", "--count", "HEAD"], path)
-    if ok and count_output:
-        info += f"\n总提交数: {count_output}\n"
+        # 提交统计
+        commit_count = sum(1 for _ in repo.iter_commits())
+        info += f"\n总提交数: {commit_count}\n"
 
-    return info
+        return info
+
+    except Exception as e:
+        return f"错误: {e}"
 
 
 # 为了向后兼容
