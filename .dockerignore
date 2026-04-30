@@ -1,0 +1,45 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.egg-info
+.eggs
+dist
+build
+.venv
+venv
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Test
+.pytest_cache
+.coverage
+htmlcov
+.mypy_cache
+.ruff_cache
+
+# Docs
+docs
+wiki
+*.md
+!README.md
+
+# Node.js (旧 CLI，已废弃)
+node_modules
+packages
+package.json
+pnpm-lock.yaml
+pnpm-workspace.yaml
+
+# Config
+.env
+.env.local
+.jojo-code
