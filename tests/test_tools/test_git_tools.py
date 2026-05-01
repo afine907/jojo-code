@@ -163,10 +163,18 @@ class TestGitInfo:
         def mock_subprocess_run(cmd, *args, **kwargs):
             if cmd == ["git", "rev-parse", "--git-dir"]:
                 return MagicMock(returncode=0, stdout=".git", stderr="")
-            elif cmd == ["git", "log", "-1", "--format=remote:%D%ncommit:%H%nauthor:%an%ndate:%ar%nmessage:%s"]:
+            elif cmd == [
+                "git",
+                "log",
+                "-1",
+                "--format=remote:%D%ncommit:%H%nauthor:%an%ndate:%ar%nmessage:%s",
+            ]:
                 return MagicMock(
                     returncode=0,
-                    stdout="remote:HEAD -> main\ncommit:abc1234\nauthor:Alice\ndate:2 days ago\nmessage:Fix bug",
+                    stdout=(
+                        "remote:HEAD -> main\ncommit:abc1234\n"
+                        "author:Alice\ndate:2 days ago\nmessage:Fix bug"
+                    ),
                     stderr="",
                 )
             elif cmd == ["git", "remote", "-v"]:
