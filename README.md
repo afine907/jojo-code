@@ -2,28 +2,58 @@
 
 # 🤖 jojo-Code
 
-**A coding agent powered by LangGraph - Python CLI + WebSocket Server**
+**轻量级 AI 编码助手 - 全 Python 实现，易于定制和扩展**
 
 [![Python](https://img.shields.io/badge/Python-3.11%2B-blue?logo=python&logoColor=white)](https://python.org)
 [![LangGraph](https://img.shields.io/badge/LangGraph-0.3%2B-green?logo=langchain&logoColor=white)](https://github.com/langchain-ai/langgraph)
 [![Textual](https://img.shields.io/badge/Textual-0.40%2B-blueviolet?logo=python&logoColor=white)](https://github.com/Textualize/textual)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![GitHub Stars](https://img.shields.io/github/stars/afine907/jojo-code?style=social)](https://github.com/afine907/jojo-code/stargazers)
 
-*全 Python 编码 Agent：Textual TUI + WebSocket Server + LangGraph*
+*终端 TUI + WebSocket Server + LangGraph Agent - 可自托管、可扩展的编码助手*
+
+**[English](README_EN.md)** | 中文文档
 
 </div>
 
 ---
 
-## ✨ 特色
+## 🎯 为什么选择 jojo-Code？
+
+| 特性 | jojo-Code | Claude Code | Cursor | Aider |
+|------|-----------|-------------|--------|-------|
+| **开源免费** | ✅ 完全开源 | ❌ 商业产品 | ❌ 商业产品 | ✅ 开源 |
+| **自托管** | ✅ 完全本地 | ❌ 云端 | ❌ 云端 | ✅ 本地 |
+| **终端 TUI** | ✅ Textual | ✅ 终端 | ❌ IDE 插件 | ✅ 终端 |
+| **Python 原生** | ✅ 100% Python | ❌ TypeScript | ❌ TypeScript | ✅ Python |
+| **易于定制** | ✅ 插件式工具 | ❌ 封闭 | ⚠️ 有限 | ✅ 可定制 |
+| **LangGraph** | ✅ 可视化调试 | ❌ | ❌ | ❌ |
+| **远程部署** | ✅ WebSocket | ❌ | ❌ | ❌ |
+
+**jojo-Code 的独特价值**：
+- 🎓 **学习友好**：清晰的 LangGraph 架构，适合学习 Agent 开发
+- 🔧 **易于扩展**：插件式工具系统，20 行代码添加新工具
+- 🌐 **灵活部署**：本地 CLI 或远程 WebSocket Server
+- 💰 **成本可控**：支持任意 OpenAI 兼容 API（LongCat、DeepSeek、Moonshot...）
+
+---
+
+## ✨ 核心功能
 
 - 🔧 **20+ 工具** - 文件读写、代码搜索、Shell 执行、Git 操作、Web 搜索
-- 🧠 **Agent 循环** - LangGraph 状态机：Thinking → Tool Call → Execute → Observe
+- 🧠 **LangGraph Agent** - 状态机驱动：Thinking → Tool Call → Execute → Observe
 - 💾 **智能记忆** - 自动 Token 计数与上下文压缩
-- 🖥️ **现代 TUI** - Textual 框架终端界面，流式输出
+- 🖥️ **现代 TUI** - Textual 终端界面，流式输出，类似 Claude Code
 - 🌐 **WebSocket 服务** - CLI 与 Server 分离，支持远程部署
+- 🔐 **权限控制** - 敏感操作需要用户确认
 - 🐳 **Docker 支持** - 一键部署，环境变量配置
-- 🧪 **TDD 驱动** - 350+ 测试覆盖
+- 🧪 **高测试覆盖** - 350+ 测试，TDD 开发
+
+---
+
+## 📸 截图
+
+> TUI 界面截图（待补充）
 
 ---
 
@@ -32,17 +62,22 @@
 ### 安装
 
 ```bash
+# 从 PyPI 安装（即将发布）
 pip install jojo-code
+
+# 或从源码安装
+git clone https://github.com/afine907/jojo-code.git
+cd jojo-code
+uv sync
 ```
 
 ### 配置
 
 ```bash
-# 设置 API Key
+# 设置 API Key（支持任意 OpenAI 兼容 API）
 export OPENAI_API_KEY=your-api-key
 
-# 或使用 OpenAI 兼容 API
-export OPENAI_API_KEY=your-api-key
+# 可选：使用其他 API
 export OPENAI_BASE_URL=https://api.longcat.chat/openai/v1
 export JOJO_CODE_MODEL=LongCat-Flash-Chat
 ```
@@ -50,12 +85,79 @@ export JOJO_CODE_MODEL=LongCat-Flash-Chat
 ### 使用
 
 ```bash
-# 启动 TUI（自动连接本地服务）
+# 启动 TUI
 jojo-code
 
-# 或手动启动服务
-jojo-code server start
-jojo-code
+# 或先启动服务，再连接
+jojo-code server start -d  # 后台启动
+jojo-code                  # 连接服务
+```
+
+---
+
+## 💡 使用场景
+
+### 1. 日常编码
+
+```
+你: 帮我在 user 模块添加一个登录函数
+
+jojo: 
+[Reading] src/user/__init__.py
+[Reading] src/auth/session.py
+[Writing] src/user/login.py
+✅ 已创建 login.py，包含 login() 函数
+```
+
+### 2. 代码重构
+
+```
+你: 把 authenticate 函数拆分成多个小函数
+
+jojo:
+[Reading] src/auth/authenticate.py
+[Editing] src/auth/authenticate.py
+✅ 已拆分为：validate_credentials(), check_permission(), create_session()
+```
+
+### 3. Bug 修复
+
+```
+你: 修复 login 函数中的 SQL 注入漏洞
+
+jojo:
+[Reading] src/user/login.py
+[Editing] src/user/login.py
+✅ 已使用参数化查询替换字符串拼接
+```
+
+### 4. 学习 LangGraph
+
+jojo-Code 的清晰架构适合学习 Agent 开发：
+
+```python
+# src/jojo_code/agent/graph.py
+from langgraph.graph import StateGraph
+
+# 定义状态
+class AgentState(TypedDict):
+    messages: list[BaseMessage]
+    tool_calls: list[ToolCall]
+
+# 定义节点
+def thinking(state: AgentState) -> AgentState:
+    """LLM 思考，决定是否调用工具"""
+    ...
+
+def execute(state: AgentState) -> AgentState:
+    """执行工具调用"""
+    ...
+
+# 构建图
+graph = StateGraph(AgentState)
+graph.add_node("thinking", thinking)
+graph.add_node("execute", execute)
+graph.add_edge("thinking", "execute")
 ```
 
 ---
