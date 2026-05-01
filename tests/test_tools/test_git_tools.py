@@ -1,6 +1,6 @@
 """Git 工具测试 - GitPython 版本"""
 
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, patch
 
 from jojo_code.tools.git_tools import git_blame, git_branch, git_diff, git_info, git_log, git_status
 
@@ -37,6 +37,7 @@ class TestGitStatus:
     def test_git_status_error(self, mock_repo_class):
         """测试 Git 错误"""
         from git import InvalidGitRepositoryError
+
         mock_repo_class.side_effect = InvalidGitRepositoryError()
 
         result = git_status.invoke({"path": "."})
@@ -172,6 +173,7 @@ class TestGitInfo:
     def test_git_info_not_repo(self, mock_repo_class):
         """测试非 Git 仓库的情况"""
         from git import InvalidGitRepositoryError
+
         mock_repo_class.side_effect = InvalidGitRepositoryError()
 
         result = git_info.invoke({"path": "."})
