@@ -1,18 +1,19 @@
-"""性能监控工具 - 代码性能分析和监控"""
+"""性能监控工具 - 代码性能分析和监控（基于 radon）"""
 
 import ast
+import cProfile
 import io
 import pstats
 import time
-import traceback
 from pathlib import Path
 
 from langchain_core.tools import tool
+from radon.complexity import cc_rank, cc_visit
 
 
 @tool
 def profile_python_file(file_path: str, script_args: str | None = "") -> str:
-    """对 Python 文件进行性能分析（通过 cProfile 直接执行，而非 subprocess）。
+    """对 Python 文件进行性能分析（通过 cProfile 直接执行）。
 
     Args:
         file_path: 要分析的 Python 文件路径
@@ -21,8 +22,6 @@ def profile_python_file(file_path: str, script_args: str | None = "") -> str:
     Returns:
         性能分析结果
     """
-    import cProfile
-
     target_file = Path(file_path)
     if not target_file.exists():
         return f"错误: 文件不存在 {file_path}"
@@ -31,10 +30,8 @@ def profile_python_file(file_path: str, script_args: str | None = "") -> str:
         return f"错误: {file_path} 不是 Python 文件"
 
     try:
-        # 使用 cProfile 直接执行脚本（而非 subprocess，确保 profile 数据准确）
         pr = cProfile.Profile()
 
-        # 设置命令行参数
         import sys
 
         old_argv = sys.argv
@@ -44,16 +41,15 @@ def profile_python_file(file_path: str, script_args: str | None = "") -> str:
         pr.enable()
 
         try:
-            # 直接执行脚本
             exec_globals = {"__name__": "__main__", "__file__": str(target_file)}
             compiled = compile(target_file.read_text(encoding="utf-8"), str(target_file), "exec")
             exec(compiled, exec_globals)
         except SystemExit:
-            pass  # 脚本正常退出
+            pass
         except Exception as e:
             pr.disable()
             sys.argv = old_argv
-            return f"脚本执行错误: {e}\n{traceback.format_exc()}"
+            return f"脚本执行错误: {e}"
 
         pr.disable()
         end_time = time.time()
@@ -61,15 +57,13 @@ def profile_python_file(file_path: str, script_args: str | None = "") -> str:
 
         execution_time = end_time - start_time
 
-        # 捕获分析结果
         s = io.StringIO()
         ps = pstats.Stats(pr, stream=s)
         ps.sort_stats("cumulative")
-        ps.print_stats(20)  # 显示前20个最耗时的函数
+        ps.print_stats(20)
 
         profile_output = s.getvalue()
 
-        # 构建结果
         result_text = f"性能分析结果: {file_path}\n"
         result_text += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         result_text += f"执行时间: {execution_time:.3f} 秒\n"
@@ -83,7 +77,7 @@ def profile_python_file(file_path: str, script_args: str | None = "") -> str:
 
 @tool
 def analyze_function_complexity(file_path: str) -> str:
-    """分析 Python 文件中函数的复杂度。
+    """分析 Python 文件中函数的复杂度（基于 radon 圈复杂度）。
 
     Args:
         file_path: Python 文件路径
@@ -99,63 +93,30 @@ def analyze_function_complexity(file_path: str) -> str:
         return f"错误: {file_path} 不是 Python 文件"
 
     try:
-        content = target_file.read_text(encoding="utf-8")
-        tree = ast.parse(content)
+        code = target_file.read_text(encoding="utf-8")
+        blocks = cc_visit(code)
 
-        functions = []
-
-        for node in ast.walk(tree):
-            if isinstance(node, ast.FunctionDef):
-                # 计算函数复杂度
-                complexity = _calculate_function_complexity(node)
-
-                # 获取函数信息（单次遍历）
-                has_return = False
-                has_loops = False
-                has_conditionals = False
-
-                for n in ast.walk(node):
-                    if isinstance(n, ast.Return):
-                        has_return = True
-                    elif isinstance(n, (ast.For, ast.While)):
-                        has_loops = True
-                    elif isinstance(n, ast.If):
-                        has_conditionals = True
-
-                func_info = {
-                    "name": node.name,
-                    "line": node.lineno,
-                    "complexity": complexity,
-                    "params": len(node.args.args),
-                    "has_return": has_return,
-                    "has_loops": has_loops,
-                    "has_conditionals": has_conditionals,
-                }
-
-                functions.append(func_info)
-
-        if not functions:
+        if not blocks:
             return f"在 {file_path} 中未找到函数定义"
 
         # 按复杂度排序
-        functions.sort(key=lambda x: x["complexity"], reverse=True)
+        blocks.sort(key=lambda x: x.complexity, reverse=True)
 
         result = f"函数复杂度分析: {file_path}\n"
         result += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
 
-        for func in functions:
-            complexity_level = _get_complexity_level(func["complexity"])
-            result += f"函数: {func['name']} (第 {func['line']} 行)\n"
-            result += f"  复杂度: {func['complexity']} ({complexity_level})\n"
-            result += f"  参数数量: {func['params']}\n"
-            result += f"  特性: {', '.join(_get_function_features(func))}\n\n"
+        for block in blocks:
+            rank = cc_rank(block.complexity)
+            result += f"函数: {block.name} (第 {block.lineno} 行)\n"
+            result += f"  复杂度: {block.complexity} ({rank}级)\n"
+            result += f"  类型: {block.letter}\n\n"
 
-        # 提供总体建议
-        high_complexity_funcs = [f for f in functions if f["complexity"] > 10]
-        if high_complexity_funcs:
-            result += f"⚠️  发现 {len(high_complexity_funcs)} 个高复杂度函数，建议重构:\n"
-            for func in high_complexity_funcs[:3]:
-                result += f"  • {func['name']} (复杂度: {func['complexity']})\n"
+        # 总体建议
+        high_complexity = [b for b in blocks if b.complexity > 10]
+        if high_complexity:
+            result += f"⚠️  发现 {len(high_complexity)} 个高复杂度函数，建议重构:\n"
+            for b in high_complexity[:3]:
+                result += f"  • {b.name} (复杂度: {b.complexity}, {cc_rank(b.complexity)}级)\n"
 
         return result
 
@@ -165,57 +126,9 @@ def analyze_function_complexity(file_path: str) -> str:
         return f"分析失败: {e}"
 
 
-def _calculate_function_complexity(node: ast.FunctionDef) -> int:
-    """计算函数复杂度（圈复杂度）"""
-    complexity = 1  # 基础复杂度
-
-    for n in ast.walk(node):
-        if isinstance(n, ast.If):
-            complexity += 1
-        elif isinstance(n, (ast.For, ast.While)):
-            complexity += 2
-        elif isinstance(n, ast.Try):
-            complexity += len(n.handlers)
-        elif isinstance(n, ast.With):
-            complexity += 1
-        elif isinstance(n, ast.BoolOp):
-            complexity += len(n.values) - 1
-        elif isinstance(n, ast.Compare):
-            complexity += len(n.ops) - 1
-
-    return complexity
-
-
-def _get_complexity_level(complexity: int) -> str:
-    """获取复杂度等级描述"""
-    if complexity <= 5:
-        return "简单"
-    elif complexity <= 10:
-        return "中等"
-    elif complexity <= 20:
-        return "复杂"
-    else:
-        return "非常复杂"
-
-
-def _get_function_features(func_info: dict) -> list:
-    """获取函数特性列表"""
-    features = []
-    if func_info["has_return"]:
-        features.append("有返回值")
-    if func_info["has_loops"]:
-        features.append("包含循环")
-    if func_info["has_conditionals"]:
-        features.append("包含条件语句")
-    if func_info["params"] > 3:
-        features.append("多参数")
-
-    return features if features else ["简单函数"]
-
-
 @tool
 def suggest_performance_optimizations(file_path: str) -> str:
-    """分析代码并提供性能优化建议（单次 AST 遍历）。
+    """分析代码并提供性能优化建议（基于 radon + AST）。
 
     Args:
         file_path: Python 文件路径
@@ -231,60 +144,47 @@ def suggest_performance_optimizations(file_path: str) -> str:
         return f"错误: {file_path} 不是 Python 文件"
 
     try:
-        content = target_file.read_text(encoding="utf-8")
-        tree = ast.parse(content)
+        code = target_file.read_text(encoding="utf-8")
+        tree = ast.parse(code)
         suggestions = []
 
-        # 单次 AST 遍历收集所有信息
-        # 跟踪属性访问
-        attr_access_count: dict[str, int] = {}
-        # 全局变量
-        global_vars: list[str] = []
+        # radon 圈复杂度分析
+        blocks = cc_visit(code)
+        for block in blocks:
+            if block.complexity > 15:
+                suggestions.append(
+                    f"{block.name}: 复杂度={block.complexity} ({cc_rank(block.complexity)}级),"
+                    "强烈建议重构"
+                )
+            elif block.complexity > 10:
+                suggestions.append(f"函数 '{block.name}' 圈复杂度 {block.complexity}，建议优化")
 
+        # radon 可维护性指数
+        mi = mi_visit_wrapper(code)
+        if mi < 40:
+            suggestions.append(f"文件可维护性指数 {mi:.1f}/100，整体需要重构")
+
+        # AST: 嵌套循环
         for node in ast.walk(tree):
-            # 检查嵌套循环
             if isinstance(node, (ast.For, ast.While)):
-                # 检查父节点是否也是循环
-                for parent in ast.walk(tree):
-                    if isinstance(parent, (ast.For, ast.While)) and parent != node:
-                        # 检查 node 是否在 parent 内
-                        for child in ast.walk(parent):
-                            if child is node:
-                                suggestions.append(
-                                    f"第 {node.lineno} 行: 检测到嵌套循环，考虑优化算法复杂度"
-                                )
-                                break
+                for child in ast.walk(node):
+                    if isinstance(child, (ast.For, ast.While)) and child is not node:
+                        suggestions.append(f"第 {node.lineno} 行: 检测到嵌套循环")
                         break
 
-            # 检查属性访问次数
-            elif isinstance(node, ast.Attribute):
-                try:
-                    attr_name = f"{ast.unparse(node.value)}.{node.attr}"
-                    attr_access_count[attr_name] = attr_access_count.get(attr_name, 0) + 1
-                except (TypeError, ValueError):
-                    pass
-
-            # 检查字符串拼接
-            elif isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add):
+        # AST: 字符串拼接
+        for node in ast.walk(tree):
+            if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add):
                 if isinstance(node.left, ast.Constant) and isinstance(node.left.value, str):
-                    suggestions.append(f"第 {node.lineno} 行: 字符串拼接，考虑使用 join() 方法")
+                    suggestions.append(f"第 {node.lineno} 行: 字符串拼接，考虑使用 join()")
 
-            # 检查全局变量
-            elif isinstance(node, ast.Global):
+        # AST: 全局变量
+        global_vars = []
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Global):
                 global_vars.extend(node.names)
-
-            # 检查大列表
-            elif isinstance(node, ast.List) and len(node.elts) > 100:
-                suggestions.append(f"第 {node.lineno} 行: 创建大型列表，考虑使用生成器")
-
-        # 添加高频属性访问建议
-        for attr_name, count in attr_access_count.items():
-            if count > 3:
-                suggestions.append(f"属性 '{attr_name}' 访问 {count} 次，考虑缓存到变量")
-
-        # 添加全局变量建议
         if global_vars:
-            suggestions.append(f"使用全局变量: {', '.join(global_vars)}，考虑使用参数传递")
+            suggestions.append(f"使用全局变量: {', '.join(global_vars)}")
 
         if not suggestions:
             return f"性能分析: {file_path}\n代码性能良好，暂无明显优化建议"
@@ -304,9 +204,19 @@ def suggest_performance_optimizations(file_path: str) -> str:
         return f"分析失败: {e}"
 
 
+def mi_visit_wrapper(code: str) -> float:
+    """安全调用 radon 的 mi_visit 函数。"""
+    try:
+        from radon.metrics import mi_visit
+
+        return mi_visit(code, True)
+    except Exception:
+        return 100.0  # 默认值
+
+
 @tool
 def benchmark_code_snippet(code: str, iterations: int = 1000) -> str:
-    """对代码片段进行简单的基准测试（使用 timeit 而非 exec 循环）。
+    """对代码片段进行基准测试（使用 timeit）。
 
     Args:
         code: 要测试的 Python 代码片段
@@ -318,14 +228,13 @@ def benchmark_code_snippet(code: str, iterations: int = 1000) -> str:
     import timeit
 
     try:
-        # 安全检查：禁止危险操作
+        # 安全检查
         dangerous_patterns = ["import os", "subprocess", "open(", "__import__", "eval(", "exec("]
         code_lower = code.lower()
         for pattern in dangerous_patterns:
             if pattern.lower() in code_lower:
                 return f"安全拒绝: 代码包含潜在危险操作 '{pattern}'"
 
-        # 使用 timeit 进行精确计时
         timer = timeit.Timer(code)
         total_time = timer.timeit(number=iterations)
         avg_time = total_time / iterations
@@ -338,7 +247,6 @@ def benchmark_code_snippet(code: str, iterations: int = 1000) -> str:
         result += f"平均时间: {avg_time:.6f} 秒\n"
         result += f"每秒执行: {1 / avg_time:.0f} 次\n"
 
-        # 提供简单的性能评估
         if avg_time < 0.001:
             performance = "非常快 ⚡"
         elif avg_time < 0.01:
