@@ -163,6 +163,20 @@ class TestGitInfo:
         def mock_subprocess_run(cmd, *args, **kwargs):
             if cmd == ["git", "rev-parse", "--git-dir"]:
                 return MagicMock(returncode=0, stdout=".git", stderr="")
+            elif cmd == [
+                "git",
+                "log",
+                "-1",
+                "--format=remote:%D%ncommit:%H%nauthor:%an%ndate:%ar%nmessage:%s",
+            ]:
+                return MagicMock(
+                    returncode=0,
+                    stdout=(
+                        "remote:HEAD -> main\ncommit:abc1234\n"
+                        "author:Alice\ndate:2 days ago\nmessage:Fix bug"
+                    ),
+                    stderr="",
+                )
             elif cmd == ["git", "remote", "-v"]:
                 return MagicMock(
                     returncode=0,
@@ -171,8 +185,6 @@ class TestGitInfo:
                 )
             elif cmd == ["git", "rev-list", "--count", "HEAD"]:
                 return MagicMock(returncode=0, stdout="42", stderr="")
-            elif cmd == ["git", "shortlog", "-s", "-n", "--all"]:
-                return MagicMock(returncode=0, stdout="42\tAlice\n10\tBob", stderr="")
             else:
                 return MagicMock(returncode=1, stdout="", stderr="unknown command")
 
@@ -182,7 +194,7 @@ class TestGitInfo:
         assert "Git 仓库信息" in result
         assert "远程仓库" in result
         assert "总提交数: 42" in result
-        assert "主要贡献者" in result
+        assert "Alice" in result
 
     @patch("jojo_code.tools.git_tools.subprocess.run")
     def test_git_info_not_repo(self, mock_run):

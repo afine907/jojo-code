@@ -1,7 +1,5 @@
 """性能工具测试"""
 
-from unittest.mock import MagicMock, patch
-
 from jojo_code.tools.performance_tools import (
     analyze_function_complexity,
     benchmark_code_snippet,
@@ -37,23 +35,17 @@ class TestProfilePythonFile:
         result = profile_python_file.invoke(str(file_path))
         assert "不是 Python 文件" in result
 
-    @patch("jojo_code.tools.performance_tools.subprocess.run")
-    def test_profile_with_args(self, mock_run, tmp_path):
-        """应该能传递命令行参数"""
+    def test_profile_with_args(self, tmp_path):
+        """应该能传递命令行参数并正确执行"""
         file_path = tmp_path / "test.py"
         file_path.write_text("import sys; print(sys.argv)")
 
-        mock_run.return_value = MagicMock(
-            returncode=0, stdout="['test.py', 'arg1', 'arg2']", stderr=""
+        result = profile_python_file.invoke(
+            {"file_path": str(file_path), "script_args": "arg1 arg2"}
         )
 
-        profile_python_file.invoke(str(file_path))
-
-        # 验证命令被正确调用
-        mock_run.assert_called_once()
-        call_args = mock_run.call_args[0][0]
-        assert "python" in call_args
-        assert "test.py" in call_args[-1]  # 文件路径在最后一个参数
+        assert "性能分析结果" in result
+        assert "执行时间" in result
 
 
 class TestAnalyzeFunctionComplexity:

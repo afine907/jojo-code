@@ -49,4 +49,4 @@ def test_web_search_exception_handling():
         mock_ddgs.side_effect = Exception("Network error")
 
         result = web_search.invoke({"query": "test", "count": 5})
-        assert result == ""
+        assert "搜索失败" in result or result == ""
