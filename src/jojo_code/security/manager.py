@@ -44,7 +44,7 @@ class PermissionConfig:
     audit_log_path: Path = field(default_factory=lambda: Path(".jojo-code/audit.log"))
 
     # 权限模式
-    mode: str = "interactive"  # yolo | auto_approve | interactive | strict | readonly
+    mode: str = "auto"  # auto | manual | bypass (与 Claude Code 一致)
 
     def __post_init__(self) -> None:
         """确保路径是 Path 对象"""
